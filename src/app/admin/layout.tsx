@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Users, Package, FolderTree, ImageIcon } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Users, Package, FolderTree, ImageIcon, Tag, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -12,6 +12,8 @@ const navItems = [
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/categorias", label: "Categorías", icon: FolderTree },
+  { href: "/admin/marcas", label: "Marcas", icon: Tag },
+  { href: "/admin/modelos", label: "Modelos", icon: Car },
   { href: "/admin/banners", label: "Banners", icon: ImageIcon },
 ];
 

@@ -1,3 +1,16 @@
+export interface Brand {
+  id: string;
+  name: string;
+  image_url: string | null;
+}
+
+export interface CarModel {
+  id: string;
+  name: string;
+  brand_id: string;
+  brand?: Brand;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -15,8 +28,11 @@ export interface Product {
   brand: string;
   car_model: string;
   stock: number;
+  featured: boolean;
   created_at: string;
   category?: Category;
+  product_brands?: { brand: Brand }[];
+  product_car_models?: { car_model: CarModel }[];
 }
 
 export interface CartItem {

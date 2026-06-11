@@ -11,8 +11,37 @@ export default async function CatalogoPage({
   const supabase = await createClient();
 
   const { data: categories } = await supabase.from("categories").select("*").order("name");
+  const { data: brandsList } = await supabase.from("brands").select("*").order("name");
 
-  let query = supabase.from("products").select("*, category:categories(*)");
+  let productIds: string[] | null = null;
+
+  if (params.brand) {
+    const { data: brandRow } = await supabase.from("brands").select("id").eq("name", params.brand).single();
+    if (brandRow) {
+      const { data: pbRows } = await supabase.from("product_brands").select("product_id").eq("brand_id", brandRow.id);
+      productIds = pbRows?.map((r) => r.product_id) ?? [];
+    } else {
+      productIds = [];
+    }
+  }
+
+  if (params.model) {
+    const { data: modelRows } = await supabase.from("car_models").select("id").ilike("name", `%${params.model}%`);
+    if (modelRows && modelRows.length > 0) {
+      const modelIds = modelRows.map((m) => m.id);
+      const { data: pmRows } = await supabase.from("product_car_models").select("product_id").in("car_model_id", modelIds);
+      const modelProductIds = pmRows?.map((r) => r.product_id) ?? [];
+      if (productIds !== null) {
+        productIds = productIds.filter((id) => modelProductIds.includes(id));
+      } else {
+        productIds = modelProductIds;
+      }
+    } else {
+      productIds = [];
+    }
+  }
+
+  let query = supabase.from("products").select("*, category:categories(*), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))");
 
   if (params.category) {
     const { data: cat } = await supabase
@@ -23,12 +52,12 @@ export default async function CatalogoPage({
     if (cat) query = query.eq("category_id", cat.id);
   }
 
-  if (params.brand) {
-    query = query.ilike("brand", params.brand);
-  }
-
-  if (params.model) {
-    query = query.ilike("car_model", `%${params.model}%`);
+  if (productIds !== null) {
+    if (productIds.length === 0) {
+      query = query.in("id", ["00000000-0000-0000-0000-000000000000"]);
+    } else {
+      query = query.in("id", productIds);
+    }
   }
 
   if (params.q) {
@@ -37,11 +66,11 @@ export default async function CatalogoPage({
 
   const { data: products } = await query.order("created_at", { ascending: false });
 
-  const brands = [...new Set(products?.map((p) => p.brand).filter(Boolean) || [])];
+  const brands = brandsList?.map((b) => b.name) ?? [];
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Catálogo de Repuestos</h1>
+      <h1 className="text-3xl font-bold mb-8">Catalogo de Repuestos</h1>
       <div className="flex flex-col md:flex-row gap-8">
         <aside className="w-full md:w-64 shrink-0">
           <CatalogoFilters
@@ -63,7 +92,7 @@ export default async function CatalogoPage({
           ) : (
             <div className="text-center py-20 text-muted-foreground">
               <p className="text-lg">No se encontraron productos</p>
-              <p className="text-sm mt-2">Intenta con otros filtros o búsqueda</p>
+              <p className="text-sm mt-2">Intenta con otros filtros o busqueda</p>
             </div>
           )}
         </div>

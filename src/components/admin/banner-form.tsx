@@ -75,11 +75,11 @@ export function BannerForm({ editId }: { editId: string | null }) {
     setLoading(false);
 
     if (error) {
-      toast.error(`Error al ${editId ? "actualizar" : "crear"} el banner`);
+      toast.error(`Error al ${editId ? "actualizar" : "crear"}`, { description: "No se pudo guardar el banner. Intenta nuevamente." });
       return;
     }
 
-    toast.success(editId ? "Banner actualizado" : "Banner creado");
+    toast.success(editId ? "Banner actualizado" : "Banner creado", { description: `"${form.title}" fue guardado correctamente.` });
     router.push("/admin/banners");
     router.refresh();
   }

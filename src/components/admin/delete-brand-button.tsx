@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 
-export function DeleteProductButton({ productId, productName }: { productId: string; productName: string }) {
+export function DeleteBrandButton({ brandId, brandName }: { brandId: string; brandName: string }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -16,16 +16,16 @@ export function DeleteProductButton({ productId, productName }: { productId: str
 
   async function handleDelete() {
     setLoading(true);
-    const { error } = await supabase.from("products").delete().eq("id", productId);
+    const { error } = await supabase.from("brands").delete().eq("id", brandId);
     setLoading(false);
 
     if (error) {
-      toast.error("Error al eliminar", { description: "No se pudo eliminar el producto. Intenta nuevamente." });
+      toast.error("Error al eliminar", { description: "No se pudo eliminar la marca. Intenta nuevamente." });
       setOpen(false);
       return;
     }
 
-    toast.success("Producto eliminado", { description: `"${productName}" fue eliminado correctamente.` });
+    toast.success("Marca eliminada", { description: `"${brandName}" y sus modelos fueron eliminados.` });
     setOpen(false);
     router.refresh();
   }
@@ -38,8 +38,8 @@ export function DeleteProductButton({ productId, productName }: { productId: str
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Eliminar producto"
-        description={`¿Estás seguro de eliminar "${productName}"? Esta acción no se puede deshacer.`}
+        title="Eliminar marca"
+        description={`¿Estás seguro de eliminar "${brandName}"? Se eliminarán también sus modelos y las asignaciones a productos.`}
         confirmLabel="Eliminar"
         loading={loading}
         onConfirm={handleDelete}

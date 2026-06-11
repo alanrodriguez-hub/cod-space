@@ -17,7 +17,7 @@ export default async function ProductDetailPage({
   const supabase = await createClient();
   const { data: product } = await supabase
     .from("products")
-    .select("*, category:categories(*)")
+    .select("*, category:categories(*), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))")
     .eq("id", id)
     .single();
 
@@ -52,12 +52,16 @@ export default async function ProductDetailPage({
 
         <div className="space-y-6">
           <div>
-            <div className="flex gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mb-3">
               {product.category && (
                 <Badge variant="secondary">{product.category.name}</Badge>
               )}
-              <Badge variant="outline">{product.brand}</Badge>
-              <Badge variant="outline">{product.car_model}</Badge>
+              {product.product_brands?.map((pb: { brand: { id: string; name: string } }) => (
+                <Badge key={pb.brand.id} variant="outline">{pb.brand.name}</Badge>
+              ))}
+              {product.product_car_models?.map((pm: { car_model: { id: string; name: string } }) => (
+                <Badge key={pm.car_model.id} variant="outline">{pm.car_model.name}</Badge>
+              ))}
             </div>
             <h1 className="text-3xl font-bold">{product.name}</h1>
           </div>

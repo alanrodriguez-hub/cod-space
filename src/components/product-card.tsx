@@ -37,9 +37,19 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
       <CardContent className="p-4 space-y-2">
-        <div className="flex gap-2">
-          <Badge variant="secondary" className="text-xs">{product.brand}</Badge>
-          <Badge variant="outline" className="text-xs">{product.car_model}</Badge>
+        <div className="flex flex-wrap gap-1">
+          {product.product_brands?.map((pb) => (
+            <Badge key={pb.brand.id} variant="secondary" className="text-xs">{pb.brand.name}</Badge>
+          ))}
+          {product.product_car_models?.map((pm) => (
+            <Badge key={pm.car_model.id} variant="outline" className="text-xs">{pm.car_model.name}</Badge>
+          ))}
+          {!product.product_brands?.length && !product.product_car_models?.length && product.brand && (
+            <>
+              <Badge variant="secondary" className="text-xs">{product.brand}</Badge>
+              {product.car_model && <Badge variant="outline" className="text-xs">{product.car_model}</Badge>}
+            </>
+          )}
         </div>
         <Link href={`/catalogo/${product.id}`}>
           <h3 className="font-semibold line-clamp-2 hover:text-primary transition-colors">

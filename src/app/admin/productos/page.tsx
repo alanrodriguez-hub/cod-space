@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
+import { ToggleFeaturedButton } from "@/components/admin/toggle-featured-button";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", minimumFractionDigits: 0 }).format(price);
@@ -14,7 +15,7 @@ export default async function AdminProductosPage() {
   const supabase = await createClient();
   const { data: products } = await supabase
     .from("products")
-    .select("*, category:categories(name)")
+    .select("*, category:categories(name), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))")
     .order("created_at", { ascending: false });
 
   return (
@@ -40,6 +41,7 @@ export default async function AdminProductosPage() {
                   <th className="text-left p-3 font-medium">Modelo</th>
                   <th className="text-left p-3 font-medium">Precio</th>
                   <th className="text-left p-3 font-medium">Stock</th>
+                  <th className="text-left p-3 font-medium">Destacado</th>
                   <th className="text-left p-3 font-medium">Acciones</th>
                 </tr>
               </thead>
@@ -50,13 +52,28 @@ export default async function AdminProductosPage() {
                     <td className="p-3">
                       <Badge variant="secondary">{(product.category as { name: string } | null)?.name ?? "—"}</Badge>
                     </td>
-                    <td className="p-3">{product.brand}</td>
-                    <td className="p-3 text-muted-foreground">{product.car_model}</td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(product.product_brands as { brand: { name: string } }[])?.map((pb, i) => (
+                          <Badge key={i} variant="outline">{pb.brand.name}</Badge>
+                        )) ?? "—"}
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {(product.product_car_models as { car_model: { name: string } }[])?.map((pm, i) => (
+                          <Badge key={i} variant="outline">{pm.car_model.name}</Badge>
+                        )) ?? "—"}
+                      </div>
+                    </td>
                     <td className="p-3 font-medium">{formatPrice(product.price)}</td>
                     <td className="p-3">
                       <Badge variant={product.stock > 0 ? "outline" : "destructive"}>
                         {product.stock}
                       </Badge>
+                    </td>
+                    <td className="p-3">
+                      <ToggleFeaturedButton productId={product.id} featured={product.featured} />
                     </td>
                     <td className="p-3 flex gap-1">
                       <Link
@@ -71,7 +88,7 @@ export default async function AdminProductosPage() {
                 ))}
                 {(!products || products.length === 0) && (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
                       No hay productos
                     </td>
                   </tr>

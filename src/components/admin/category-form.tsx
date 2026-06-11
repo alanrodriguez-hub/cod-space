@@ -65,11 +65,11 @@ export function CategoryForm({ editId }: { editId: string | null }) {
     setLoading(false);
 
     if (error) {
-      toast.error(`Error al ${editId ? "actualizar" : "crear"} la categoría`);
+      toast.error(`Error al ${editId ? "actualizar" : "crear"}`, { description: "No se pudo guardar la categoría. Verifica que el slug no esté duplicado." });
       return;
     }
 
-    toast.success(editId ? "Categoría actualizada" : "Categoría creada");
+    toast.success(editId ? "Categoría actualizada" : "Categoría creada", { description: `"${form.name}" fue guardada correctamente.` });
     router.push("/admin/categorias");
     router.refresh();
   }
