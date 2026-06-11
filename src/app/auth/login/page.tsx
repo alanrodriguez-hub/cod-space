@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const searchParams = useSearchParams();
@@ -44,9 +45,6 @@ export default function LoginPage() {
 
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const token = (form.elements.namedItem("token") as HTMLInputElement).value;
-
     setLoading(true);
     const { error } = await supabase.auth.verifyOtp({
       email,
@@ -105,6 +103,8 @@ export default function LoginPage() {
                   name="token"
                   type="text"
                   placeholder="123456"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
                   maxLength={6}
                   required
                   className="text-center text-2xl tracking-widest"

@@ -10,6 +10,7 @@ import { useUser } from "@/contexts/user-context";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
   const { totalItems } = useCart();
@@ -85,6 +86,7 @@ export function Navbar() {
               <User className="h-5 w-5" />
             </Link>
           )}
+          <ThemeToggle />
         </div>
 
         {/* Mobile */}
