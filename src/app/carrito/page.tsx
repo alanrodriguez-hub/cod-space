@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { MapPin } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 function formatPrice(price: number) {
@@ -21,12 +22,30 @@ export default function CarritoPage() {
   const { items, removeItem, updateQuantity, clearCart, totalPrice } = useCart();
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [address, setAddress] = useState<{ street: string; city: string; region: string; zip: string } | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  }, [supabase.auth]);
+    supabase.auth.getUser().then(async ({ data }) => {
+      setUser(data.user);
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("address_street, address_city, address_region, address_zip")
+          .eq("id", data.user.id)
+          .single();
+        if (profile?.address_street && profile?.address_city) {
+          setAddress({
+            street: profile.address_street,
+            city: profile.address_city,
+            region: profile.address_region ?? "",
+            zip: profile.address_zip ?? "",
+          });
+        }
+      }
+    });
+  }, [supabase]);
 
   async function handleSubmitOrder() {
     if (!user) {
@@ -134,8 +153,36 @@ export default function CarritoPage() {
                 <span>Total</span>
                 <span className="text-primary">{formatPrice(totalPrice)}</span>
               </div>
-              <Button className="w-full" size="lg" onClick={handleSubmitOrder} disabled={loading}>
-                {loading ? "Enviando..." : user ? "Enviar Pedido" : "Iniciar Sesión para Pedir"}
+              {user && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-sm">Dirección de Envío</span>
+                    </div>
+                    {address ? (
+                      <div className="text-sm text-muted-foreground space-y-0.5">
+                        <p>{address.street}</p>
+                        <p>{address.city}{address.region ? `, ${address.region}` : ""}</p>
+                        {address.zip && <p>CP: {address.zip}</p>}
+                        <Link href="/perfil" className="text-primary text-xs underline hover:no-underline">
+                          Cambiar dirección
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="rounded-md border border-dashed border-destructive/50 p-3 text-sm">
+                        <p className="text-destructive font-medium">No tienes dirección de envío registrada.</p>
+                        <Link href="/perfil" className="text-primary underline hover:no-underline text-xs">
+                          Completar mi dirección
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+              <Button className="w-full" size="lg" onClick={handleSubmitOrder} disabled={loading || (!!user && !address)}>
+                {loading ? "Enviando..." : !user ? "Iniciar Sesión para Pedir" : !address ? "Completa tu dirección" : "Enviar Pedido"}
               </Button>
               {!user && (
                 <p className="text-xs text-muted-foreground text-center">

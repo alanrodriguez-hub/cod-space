@@ -102,10 +102,15 @@ export default function LoginPage() {
                   id="token"
                   name="token"
                   type="text"
-                  placeholder="123456"
+                  placeholder="12345678"
                   value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                  maxLength={6}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    if (v.length <= 8) setToken(v);
+                  }}
+                  maxLength={8}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   className="text-center text-2xl tracking-widest"
                 />

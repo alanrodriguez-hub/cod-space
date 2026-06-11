@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 interface FormData {
   name: string;
@@ -96,8 +97,12 @@ export function CategoryForm({ editId }: { editId: string | null }) {
             <Input id="cat-slug" value={form.slug} onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))} required />
           </div>
           <div className="md:col-span-2">
-            <Label htmlFor="cat-image">URL de imagen</Label>
-            <Input id="cat-image" value={form.image_url} onChange={(e) => setForm((prev) => ({ ...prev, image_url: e.target.value }))} placeholder="https://..." />
+            <Label>Imagen</Label>
+            <ImageUpload
+              currentUrl={form.image_url || null}
+              folder="categories"
+              onUpload={(url) => setForm((prev) => ({ ...prev, image_url: url ?? "" }))}
+            />
           </div>
           <div className="md:col-span-2 flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={handleClose}>Cancelar</Button>

@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SocialLinks } from "@/components/social-links";
 
 const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
 
@@ -43,8 +44,14 @@ export default function RootLayout({
             <Navbar />
             <main className="flex-1">{children}</main>
             <footer className="border-t py-8 mt-auto">
-              <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-                © {new Date().getFullYear()} AutoRepuestos. Todos los derechos reservados.
+              <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-3">
+                <SocialLinks />
+                <p>© {new Date().getFullYear()} AutoRepuestos. Todos los derechos reservados.</p>
+                <p>
+                  <a href="/privacidad" className="underline hover:no-underline">
+                    Política de Privacidad
+                  </a>
+                </p>
               </div>
             </footer>
             <Toaster />

@@ -26,9 +26,19 @@ export default async function AdminOrderDetailPage({
 
   const { data: order } = await supabase
     .from("orders")
-    .select("*, profiles(email), order_items(*, product:products(name, brand, image_url))")
+    .select("*, order_items(*, product:products(name, brand, image_url))")
     .eq("id", id)
     .single();
+
+  let clientEmail = "—";
+  if (order) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", order.user_id)
+      .single();
+    clientEmail = profile?.email ?? "—";
+  }
 
   if (!order) notFound();
 
@@ -80,7 +90,7 @@ export default async function AdminOrderDetailPage({
           <Card>
             <CardContent className="p-6 space-y-4">
               <h2 className="font-semibold">Cliente</h2>
-              <p className="text-sm">{(order.profiles as { email: string } | null)?.email ?? "—"}</p>
+              <p className="text-sm">{clientEmail}</p>
             </CardContent>
           </Card>
 

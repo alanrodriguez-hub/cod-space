@@ -39,6 +39,14 @@ export interface Profile {
   id: string;
   email: string;
   role: UserRole;
+  full_name: string | null;
+  phone: string | null;
+  rut: string | null;
+  address_street: string | null;
+  address_city: string | null;
+  address_region: string | null;
+  address_zip: string | null;
+  privacy_accepted_at: string | null;
   last_sign_in_at: string | null;
   created_at: string;
 }
@@ -49,6 +57,17 @@ export interface AccessLog {
   signed_in_at: string;
   ip_address: string | null;
   profile?: Profile;
+}
+
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image_url: string;
+  link_url: string | null;
+  active: boolean;
+  sort_order: number;
+  created_at: string;
 }
 
 export interface OrderItem {

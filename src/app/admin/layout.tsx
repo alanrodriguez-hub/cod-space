@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Users, Package, FolderTree } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Users, Package, FolderTree, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -12,6 +12,7 @@ const navItems = [
   { href: "/admin/usuarios", label: "Usuarios", icon: Users },
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/categorias", label: "Categorías", icon: FolderTree },
+  { href: "/admin/banners", label: "Banners", icon: ImageIcon },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

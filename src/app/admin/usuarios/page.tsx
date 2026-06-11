@@ -27,7 +27,12 @@ export default async function AdminUsuariosPage() {
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-3 font-medium">Email</th>
+                  <th className="text-left p-3 font-medium">Nombre</th>
+                  <th className="text-left p-3 font-medium">Teléfono</th>
+                  <th className="text-left p-3 font-medium">RUT</th>
+                  <th className="text-left p-3 font-medium">Dirección</th>
                   <th className="text-left p-3 font-medium">Rol</th>
+                  <th className="text-left p-3 font-medium">Privacidad</th>
                   <th className="text-left p-3 font-medium">Último acceso</th>
                   <th className="text-left p-3 font-medium">Registrado</th>
                   <th className="text-left p-3 font-medium">Historial</th>
@@ -38,10 +43,31 @@ export default async function AdminUsuariosPage() {
                 {profiles?.map((profile) => (
                   <tr key={profile.id} className="border-b last:border-0 hover:bg-muted/30">
                     <td className="p-3">{profile.email}</td>
+                    <td className="p-3">{profile.full_name || <span className="text-muted-foreground">—</span>}</td>
+                    <td className="p-3">{profile.phone || <span className="text-muted-foreground">—</span>}</td>
+                    <td className="p-3">{profile.rut || <span className="text-muted-foreground">—</span>}</td>
+                    <td className="p-3 max-w-48">
+                      {profile.address_street ? (
+                        <span className="text-xs">
+                          {profile.address_street}, {profile.address_city}
+                          {profile.address_region ? `, ${profile.address_region}` : ""}
+                          {profile.address_zip ? ` (${profile.address_zip})` : ""}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
                     <td className="p-3">
                       <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
                         {profile.role === "admin" ? "Admin" : "Cliente"}
                       </Badge>
+                    </td>
+                    <td className="p-3">
+                      {profile.privacy_accepted_at ? (
+                        <Badge variant="outline" className="text-xs">Aceptada</Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">Pendiente</span>
+                      )}
                     </td>
                     <td className="p-3 text-muted-foreground">{formatDate(profile.last_sign_in_at)}</td>
                     <td className="p-3 text-muted-foreground">{formatDate(profile.created_at)}</td>
@@ -55,7 +81,7 @@ export default async function AdminUsuariosPage() {
                 ))}
                 {(!profiles || profiles.length === 0) && (
                   <tr>
-                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={11} className="p-6 text-center text-muted-foreground">
                       No hay usuarios registrados
                     </td>
                   </tr>

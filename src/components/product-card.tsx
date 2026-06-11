@@ -20,7 +20,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Card className="group overflow-hidden">
       <Link href={`/catalogo/${product.id}`}>
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           {product.image_url ? (
             <Image
               src={product.image_url}

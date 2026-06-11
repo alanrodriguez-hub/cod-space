@@ -23,8 +23,14 @@ export default async function AdminPedidosPage() {
   const supabase = await createClient();
   const { data: orders } = await supabase
     .from("orders")
-    .select("*, profiles(email), order_items(id)")
+    .select("*, order_items(id)")
     .order("created_at", { ascending: false });
+
+  const userIds = [...new Set(orders?.map((o) => o.user_id) ?? [])];
+  const { data: profiles } = userIds.length > 0
+    ? await supabase.from("profiles").select("id, email").in("id", userIds)
+    : { data: [] };
+  const profileMap = new Map(profiles?.map((p) => [p.id, p.email]) ?? []);
 
   return (
     <div className="space-y-6">
@@ -51,7 +57,7 @@ export default async function AdminPedidosPage() {
                   return (
                     <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30">
                       <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
-                      <td className="p-3">{(order.profiles as { email: string } | null)?.email ?? "—"}</td>
+                      <td className="p-3">{profileMap.get(order.user_id) ?? "—"}</td>
                       <td className="p-3">{(order.order_items as { id: string }[])?.length ?? 0}</td>
                       <td className="p-3 font-medium">{formatPrice(order.total)}</td>
                       <td className="p-3">

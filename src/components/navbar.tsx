@@ -74,6 +74,9 @@ export function Navbar() {
           </Link>
           {user ? (
             <>
+              <Link href="/perfil" className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                Mi Perfil
+              </Link>
               <Link href="/pedidos" className={buttonVariants({ variant: "ghost", size: "sm" })}>
                 Mis Pedidos
               </Link>
@@ -121,6 +124,9 @@ export function Navbar() {
           )}
           {user ? (
             <>
+              <Link href="/perfil" className="block text-sm font-medium py-2" onClick={() => setMenuOpen(false)}>
+                Mi Perfil
+              </Link>
               <Link href="/pedidos" className="block text-sm font-medium py-2" onClick={() => setMenuOpen(false)}>
                 Mis Pedidos
               </Link>

@@ -18,8 +18,14 @@ export default async function AdminDashboard() {
     supabase.from("profiles").select("*", { count: "exact", head: true }),
     supabase.from("categories").select("*", { count: "exact", head: true }),
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    supabase.from("orders").select("id, total, status, created_at, profiles(email)").order("created_at", { ascending: false }).limit(5),
+    supabase.from("orders").select("id, user_id, total, status, created_at").order("created_at", { ascending: false }).limit(5),
   ]);
+
+  const orderUserIds = [...new Set(recentOrders?.map((o) => o.user_id) ?? [])];
+  const { data: orderProfiles } = orderUserIds.length > 0
+    ? await supabase.from("profiles").select("id, email").in("id", orderUserIds)
+    : { data: [] };
+  const profileMap = new Map(orderProfiles?.map((p) => [p.id, p.email]) ?? []);
 
   const stats = [
     { label: "Productos", value: totalProducts ?? 0, icon: Package, color: "text-blue-600" },
@@ -80,7 +86,7 @@ export default async function AdminDashboard() {
                   {recentOrders?.map((order) => (
                     <tr key={order.id} className="border-b last:border-0">
                       <td className="p-3 font-mono text-xs">{order.id.slice(0, 8)}</td>
-                      <td className="p-3">{(order.profiles as unknown as { email: string } | null)?.email ?? "—"}</td>
+                      <td className="p-3">{profileMap.get(order.user_id) ?? "—"}</td>
                       <td className="p-3 font-medium">{formatPrice(order.total)}</td>
                       <td className="p-3">{statusLabels[order.status] ?? order.status}</td>
                       <td className="p-3 text-muted-foreground">{formatDate(order.created_at)}</td>
