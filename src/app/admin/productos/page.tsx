@@ -6,17 +6,77 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { DeleteProductButton } from "@/components/admin/delete-product-button";
 import { ToggleFeaturedButton } from "@/components/admin/toggle-featured-button";
+import { Pagination } from "@/components/pagination";
+import { AdminProductFilters } from "@/components/admin/product-filters";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", minimumFractionDigits: 0 }).format(price);
 }
 
-export default async function AdminProductosPage() {
+const PAGE_SIZE = 10;
+
+export default async function AdminProductosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ action?: string; id?: string; page?: string; category?: string; brand?: string; model?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, Number(params.page) || 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
-  const { data: products } = await supabase
+
+  const [{ data: categories }, { data: brandsList }, { data: carModelsList }] = await Promise.all([
+    supabase.from("categories").select("*").order("name"),
+    supabase.from("brands").select("*").order("name"),
+    supabase.from("car_models").select("*").order("name"),
+  ]);
+
+  let productIds: string[] | null = null;
+
+  if (params.brand) {
+    const { data: brandRow } = await supabase.from("brands").select("id").eq("name", params.brand).single();
+    if (brandRow) {
+      const { data: pbRows } = await supabase.from("product_brands").select("product_id").eq("brand_id", brandRow.id);
+      productIds = pbRows?.map((r) => r.product_id) ?? [];
+    } else {
+      productIds = [];
+    }
+  }
+
+  if (params.model) {
+    const { data: modelRows } = await supabase.from("car_models").select("id").ilike("name", `%${params.model}%`);
+    if (modelRows && modelRows.length > 0) {
+      const modelIds = modelRows.map((m) => m.id);
+      const { data: pmRows } = await supabase.from("product_car_models").select("product_id").in("car_model_id", modelIds);
+      const modelProductIds = pmRows?.map((r) => r.product_id) ?? [];
+      productIds = productIds !== null ? productIds.filter((id) => modelProductIds.includes(id)) : modelProductIds;
+    } else {
+      productIds = [];
+    }
+  }
+
+  let query = supabase
     .from("products")
-    .select("*, category:categories(name), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))")
-    .order("created_at", { ascending: false });
+    .select("*, category:categories(name), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))", { count: "exact" });
+
+  if (params.category) {
+    const { data: cat } = await supabase.from("categories").select("id").eq("slug", params.category).single();
+    if (cat) query = query.eq("category_id", cat.id);
+  }
+
+  if (productIds !== null) {
+    query = productIds.length === 0
+      ? query.in("id", ["00000000-0000-0000-0000-000000000000"])
+      : query.in("id", productIds);
+  }
+
+  const { data: products, count } = await query
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -26,6 +86,15 @@ export default async function AdminProductosPage() {
           <Plus className="h-4 w-4 mr-1" /> Nuevo Producto
         </Link>
       </div>
+
+      <AdminProductFilters
+        categories={categories || []}
+        brands={brandsList || []}
+        carModels={carModelsList || []}
+        currentCategory={params.category}
+        currentBrand={params.brand}
+        currentModel={params.model}
+      />
 
       <ProductForm />
 
@@ -98,6 +167,13 @@ export default async function AdminProductosPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/admin/productos"
+        searchParams={params}
+      />
     </div>
   );
 }

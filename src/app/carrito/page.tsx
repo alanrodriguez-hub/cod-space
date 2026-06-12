@@ -73,6 +73,13 @@ export default function CarritoPage() {
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
+      for (const item of items) {
+        await supabase.rpc("decrement_stock", {
+          p_product_id: item.product.id,
+          p_quantity: item.quantity,
+        });
+      }
+
       clearCart();
       toast.success("Pedido enviado exitosamente");
       router.push("/pedidos");
@@ -120,14 +127,19 @@ export default function CarritoPage() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeItem(item.product.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
-                      <Minus className="h-3 w-3" />
-                    </Button>
-                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                    <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center font-medium">{item.quantity}</span>
+                      <Button variant="outline" size="icon" className="h-8 w-8" disabled={item.quantity >= item.product.stock} onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <span className={`text-xs ${item.product.stock === 0 ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+                      {item.product.stock === 0 ? "Sin stock" : `Stock: ${item.product.stock}`}
+                    </span>
                   </div>
                 </div>
               </CardContent>

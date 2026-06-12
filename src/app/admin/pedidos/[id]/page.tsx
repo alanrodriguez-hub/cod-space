@@ -30,14 +30,16 @@ export default async function AdminOrderDetailPage({
     .eq("id", id)
     .single();
 
-  let clientEmail = "—";
+  let client: { email: string; full_name: string | null; phone: string | null; address_street: string | null; address_city: string | null; address_region: string | null; address_zip: string | null } = {
+    email: "—", full_name: null, phone: null, address_street: null, address_city: null, address_region: null, address_zip: null,
+  };
   if (order) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("email")
+      .select("email, full_name, phone, address_street, address_city, address_region, address_zip")
       .eq("id", order.user_id)
       .single();
-    clientEmail = profile?.email ?? "—";
+    if (profile) client = { ...client, ...profile };
   }
 
   if (!order) notFound();
@@ -53,7 +55,7 @@ export default async function AdminOrderDetailPage({
           <h1 className="text-3xl font-bold">Pedido #{order.id.slice(0, 8)}</h1>
           <p className="text-muted-foreground">{formatDate(order.created_at)}</p>
         </div>
-        <Badge variant="secondary" className="text-sm">
+        <Badge className={`text-sm ${order.status === "pending" ? "bg-yellow-500 hover:bg-yellow-600" : order.status === "confirmed" ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600"} text-white`}>
           {order.status === "pending" ? "Pendiente" : order.status === "confirmed" ? "Confirmado" : "Completado"}
         </Badge>
       </div>
@@ -88,9 +90,18 @@ export default async function AdminOrderDetailPage({
 
         <div className="space-y-4">
           <Card>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-6 space-y-3">
               <h2 className="font-semibold">Cliente</h2>
-              <p className="text-sm">{clientEmail}</p>
+              {client.full_name && <p className="text-sm font-medium">{client.full_name}</p>}
+              <p className="text-sm text-muted-foreground">{client.email}</p>
+              {client.phone && <p className="text-sm text-muted-foreground">{client.phone}</p>}
+              {client.address_street && (
+                <div className="text-sm text-muted-foreground pt-1 border-t">
+                  <p>{client.address_street}</p>
+                  <p>{client.address_city}{client.address_region ? `, ${client.address_region}` : ""}</p>
+                  {client.address_zip && <p>CP: {client.address_zip}</p>}
+                </div>
+              )}
             </CardContent>
           </Card>
 

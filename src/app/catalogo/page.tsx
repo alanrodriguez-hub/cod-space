@@ -1,13 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import { ProductCardWrapper } from "@/components/product-card-wrapper";
 import { CatalogoFilters } from "@/components/catalogo-filters";
+import { Pagination } from "@/components/pagination";
+
+const PAGE_SIZE = 12;
 
 export default async function CatalogoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; brand?: string; q?: string; model?: string }>;
+  searchParams: Promise<{ category?: string; brand?: string; q?: string; model?: string; page?: string }>;
 }) {
   const params = await searchParams;
+  const currentPage = Math.max(1, Number(params.page) || 1);
   const supabase = await createClient();
 
   const { data: categories } = await supabase.from("categories").select("*").order("name");
@@ -41,7 +45,10 @@ export default async function CatalogoPage({
     }
   }
 
-  let query = supabase.from("products").select("*, category:categories(*), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))");
+  let query = supabase.from("products").select(
+    "*, category:categories(*), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))",
+    { count: "exact" }
+  );
 
   if (params.category) {
     const { data: cat } = await supabase
@@ -64,8 +71,14 @@ export default async function CatalogoPage({
     query = query.ilike("name", `%${params.q}%`);
   }
 
-  const { data: products } = await query.order("created_at", { ascending: false });
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
 
+  const { data: products, count } = await query
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
   const brands = brandsList?.map((b) => b.name) ?? [];
 
   return (
@@ -84,11 +97,19 @@ export default async function CatalogoPage({
         </aside>
         <div className="flex-1">
           {products && products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
-                <ProductCardWrapper key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product) => (
+                  <ProductCardWrapper key={product.id} product={product} />
+                ))}
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                basePath="/catalogo"
+                searchParams={params}
+              />
+            </>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
               <p className="text-lg">No se encontraron productos</p>

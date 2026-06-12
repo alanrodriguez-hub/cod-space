@@ -35,10 +35,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((i) => i.product.id === product.id);
       if (existing) {
+        if (existing.quantity >= product.stock) return prev;
         return prev.map((i) =>
           i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
+      if (product.stock <= 0) return prev;
       return [...prev, { product, quantity: 1 }];
     });
   }, []);
@@ -53,7 +55,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.product.id === productId ? { ...i, quantity } : i))
+      prev.map((i) => {
+        if (i.product.id !== productId) return i;
+        const capped = Math.min(quantity, i.product.stock);
+        return { ...i, quantity: capped };
+      })
     );
   }, []);
 

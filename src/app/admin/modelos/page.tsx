@@ -6,13 +6,37 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { DeleteCarModelButton } from "@/components/admin/delete-car-model-button";
 import { CarModelFormWrapper as CarModelForm } from "@/components/admin/car-model-form-wrapper";
+import { Pagination } from "@/components/pagination";
+import { CarModelBrandFilter } from "@/components/admin/car-model-brand-filter";
 
-export default async function AdminModelosPage() {
+const PAGE_SIZE = 50;
+
+export default async function AdminModelosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ action?: string; id?: string; page?: string; brand?: string }>;
+}) {
+  const params = await searchParams;
+  const currentPage = Math.max(1, Number(params.page) || 1);
+  const from = (currentPage - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   const supabase = await createClient();
-  const { data: models } = await supabase
+
+  const { data: brandsList } = await supabase.from("brands").select("*").order("name");
+
+  let query = supabase
     .from("car_models")
-    .select("*, brand:brands(name), product_car_models(product_id)")
+    .select("*, brand:brands(name), product_car_models(product_id)", { count: "exact" })
     .order("name");
+
+  if (params.brand) {
+    const { data: brandRow } = await supabase.from("brands").select("id").eq("name", params.brand).single();
+    if (brandRow) query = query.eq("brand_id", brandRow.id);
+  }
+
+  const { data: models, count } = await query.range(from, to);
+  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -22,6 +46,8 @@ export default async function AdminModelosPage() {
           <Plus className="h-4 w-4 mr-1" /> Nuevo Modelo
         </Link>
       </div>
+
+      <CarModelBrandFilter brands={brandsList || []} currentBrand={params.brand} />
 
       <CarModelForm />
 
@@ -68,6 +94,13 @@ export default async function AdminModelosPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        basePath="/admin/modelos"
+        searchParams={params}
+      />
     </div>
   );
 }
