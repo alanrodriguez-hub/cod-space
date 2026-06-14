@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { ShoppingCart, User, LogOut, Menu, X, Search, Shield } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-export function Navbar() {
+export function Navbar({ siteName }: { siteName: string }) {
   const { totalItems } = useCart();
   const { user, isAdmin } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -38,8 +39,8 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="text-xl font-bold text-primary">
-          AutoRepuestos
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/images/logo-vector-full.svg" alt={siteName} height={36} width={108} priority unoptimized />
         </Link>
 
         <div className="hidden md:flex items-center gap-6">

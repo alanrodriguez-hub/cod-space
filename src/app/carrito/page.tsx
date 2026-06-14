@@ -55,36 +55,27 @@ export default function CarritoPage() {
 
     setLoading(true);
     try {
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({ user_id: user.id, total: totalPrice, status: "pending" })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
       const orderItems = items.map((item) => ({
-        order_id: order.id,
         product_id: item.product.id,
         quantity: item.quantity,
         unit_price: item.product.price,
       }));
 
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
-      if (itemsError) throw itemsError;
+      const { data, error } = await supabase.rpc("create_order", {
+        p_user_id: user.id,
+        p_items: orderItems,
+      });
 
-      for (const item of items) {
-        await supabase.rpc("decrement_stock", {
-          p_product_id: item.product.id,
-          p_quantity: item.quantity,
-        });
-      }
+      if (error) throw error;
 
       clearCart();
       toast.success("Pedido enviado exitosamente");
       router.push("/pedidos");
-    } catch {
-      toast.error("Error al enviar el pedido. Intenta nuevamente.");
+    } catch (err) {
+      const message = err instanceof Error && err.message.includes("Stock insuficiente")
+        ? "Stock insuficiente para uno de los productos"
+        : "Error al enviar el pedido. Intenta nuevamente.";
+      toast.error(message);
     } finally {
       setLoading(false);
     }

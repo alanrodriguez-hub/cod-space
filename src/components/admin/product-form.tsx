@@ -70,12 +70,12 @@ export function ProductForm({ editId }: { editId: string | null }) {
       });
       supabase.from("product_brands").select("brand:brands(*)").eq("product_id", editId).then(({ data }) => {
         if (data) {
-          setSelectedBrands(data.map((r: { brand: Brand }) => r.brand));
+          setSelectedBrands(data.map((r) => (r as unknown as { brand: Brand }).brand));
         }
       });
       supabase.from("product_car_models").select("car_model:car_models(*, brand:brands(*))").eq("product_id", editId).then(({ data }) => {
         if (data) {
-          setSelectedModels(data.map((r: { car_model: CarModel }) => r.car_model));
+          setSelectedModels(data.map((r) => (r as unknown as { car_model: CarModel }).car_model));
         }
       });
     }

@@ -1,6 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { getSiteName } from "@/lib/data-cache";
 
-export default function PrivacidadPage() {
+export async function generateMetadata() {
+  const siteName = await getSiteName();
+  return { title: `${siteName} - Política de Privacidad` };
+}
+
+export default async function PrivacidadPage() {
+  const siteName = await getSiteName();
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <h1 className="text-3xl font-bold mb-8">Política de Privacidad y Tratamiento de Datos Personales</h1>
@@ -14,7 +22,7 @@ export default function PrivacidadPage() {
           <section>
             <h2 className="text-xl font-semibold mt-0">1. Responsable del Tratamiento</h2>
             <p>
-              AutoRepuestos (en adelante, &quot;la Empresa&quot;) es responsable del tratamiento de los datos
+              {siteName} (en adelante, &quot;la Empresa&quot;) es responsable del tratamiento de los datos
               personales que los usuarios proporcionen a través de este sitio web, de acuerdo con la
               Ley N° 19.628 sobre Protección de la Vida Privada y la Ley N° 21.719 sobre Protección
               de Datos Personales de Chile.

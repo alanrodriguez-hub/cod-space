@@ -75,6 +75,12 @@ export interface AccessLog {
   profile?: Profile;
 }
 
+export interface SiteSetting {
+  key: string;
+  value: string;
+  updated_at: string;
+}
+
 export interface Banner {
   id: string;
   title: string;

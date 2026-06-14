@@ -48,7 +48,7 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="w-48">
-        <Select value={currentCategory || "__todas_categorias__"} onValueChange={(v) => updateFilter("category", v === "__todas_categorias__" ? undefined : v)}>
+        <Select value={currentCategory || "__todas_categorias__"} onValueChange={(v) => updateFilter("category", v === "__todas_categorias__" || !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todas las categorías" />
           </SelectTrigger>
@@ -62,7 +62,7 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
       </div>
 
       <div className="w-48">
-        <Select value={currentBrand || "__todas_marcas__"} onValueChange={(v) => updateFilter("brand", v === "__todas_marcas__" ? undefined : v)}>
+        <Select value={currentBrand || "__todas_marcas__"} onValueChange={(v) => updateFilter("brand", v === "__todas_marcas__" || !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todas las marcas" />
           </SelectTrigger>

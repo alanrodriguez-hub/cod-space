@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,18 @@ import { toast } from "sonner";
 import { Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+const MAX_ATTEMPTS = 5;
+const WINDOW_MINUTES = 15;
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-20 flex justify-center"><p className="text-muted-foreground">Cargando...</p></div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,8 +32,26 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  async function checkRateLimit(identifier: string, action: string): Promise<boolean> {
+    const { data, error } = await supabase.rpc("check_rate_limit", {
+      p_identifier: identifier,
+      p_action: action,
+      p_max_attempts: MAX_ATTEMPTS,
+      p_window_minutes: WINDOW_MINUTES,
+    });
+    if (error) return true;
+    return data as boolean;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const allowed = await checkRateLimit(email, "otp_send");
+    if (!allowed) {
+      toast.error(`Demasiados intentos. Espera ${WINDOW_MINUTES} minutos.`);
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithOtp({
@@ -45,6 +74,13 @@ export default function LoginPage() {
 
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
+
+    const allowed = await checkRateLimit(email, "otp_verify");
+    if (!allowed) {
+      toast.error(`Demasiados intentos. Espera ${WINDOW_MINUTES} minutos.`);
+      return;
+    }
+
     setLoading(true);
     const { error } = await supabase.auth.verifyOtp({
       email,

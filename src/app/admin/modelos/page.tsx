@@ -8,35 +8,89 @@ import { DeleteCarModelButton } from "@/components/admin/delete-car-model-button
 import { CarModelFormWrapper as CarModelForm } from "@/components/admin/car-model-form-wrapper";
 import { Pagination } from "@/components/pagination";
 import { CarModelBrandFilter } from "@/components/admin/car-model-brand-filter";
+import { getBrands } from "@/lib/data-cache";
 
 const PAGE_SIZE = 50;
+
+function encodeCursor(name: string): string {
+  return Buffer.from(name).toString("base64url");
+}
+
+function decodeCursor(cursor: string): string {
+  return Buffer.from(cursor, "base64url").toString("utf-8");
+}
 
 export default async function AdminModelosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; id?: string; page?: string; brand?: string }>;
+  searchParams: Promise<{ action?: string; id?: string; brand?: string; after?: string; before?: string }>;
 }) {
   const params = await searchParams;
-  const currentPage = Math.max(1, Number(params.page) || 1);
-  const from = (currentPage - 1) * PAGE_SIZE;
-  const to = from + PAGE_SIZE - 1;
-
   const supabase = await createClient();
 
-  const { data: brandsList } = await supabase.from("brands").select("*").order("name");
+  const brandsList = await getBrands();
 
   let query = supabase
     .from("car_models")
-    .select("*, brand:brands(name), product_car_models(product_id)", { count: "exact" })
-    .order("name");
+    .select("*, brand:brands(name), product_car_models(product_id)");
 
   if (params.brand) {
-    const { data: brandRow } = await supabase.from("brands").select("id").eq("name", params.brand).single();
-    if (brandRow) query = query.eq("brand_id", brandRow.id);
+    const brand = brandsList.find((b) => b.name === params.brand);
+    if (brand) query = query.eq("brand_id", brand.id);
   }
 
-  const { data: models, count } = await query.range(from, to);
-  const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
+  const after = params.after;
+  const before = params.before;
+  let cursorName: string | null = null;
+  let isForward = true;
+
+  if (after) {
+    cursorName = decodeCursor(after);
+    isForward = true;
+  } else if (before) {
+    cursorName = decodeCursor(before);
+    isForward = false;
+  }
+
+  if (cursorName) {
+    if (isForward) {
+      query = query.gt("name", cursorName).order("name", { ascending: true });
+    } else {
+      query = query.lt("name", cursorName).order("name", { ascending: false });
+    }
+  } else {
+    query = query.order("name", { ascending: true });
+  }
+
+  const { data: rawModels } = await query.limit(PAGE_SIZE + 1);
+
+  let models = rawModels ?? [];
+  let hasNext = false;
+  let hasPrev = Boolean(after || before);
+  let nextCursor: string | undefined;
+  let prevCursor: string | undefined;
+
+  if (isForward) {
+    if (models.length > PAGE_SIZE) {
+      hasNext = true;
+      models.pop();
+    }
+  } else {
+    if (models.length > PAGE_SIZE) {
+      models.shift();
+    }
+    models.reverse();
+  }
+
+  const firstItem = models[0];
+  const lastItem = models[models.length - 1];
+
+  if (hasNext && lastItem) {
+    nextCursor = encodeCursor(lastItem.name);
+  }
+  if (hasPrev && firstItem) {
+    prevCursor = encodeCursor(firstItem.name);
+  }
 
   return (
     <div className="space-y-6">
@@ -47,7 +101,7 @@ export default async function AdminModelosPage({
         </Link>
       </div>
 
-      <CarModelBrandFilter brands={brandsList || []} currentBrand={params.brand} />
+      <CarModelBrandFilter brands={brandsList} currentBrand={params.brand} />
 
       <CarModelForm />
 
@@ -64,7 +118,7 @@ export default async function AdminModelosPage({
                 </tr>
               </thead>
               <tbody>
-                {models?.map((model) => (
+                {models.map((model) => (
                   <tr key={model.id} className="border-b last:border-0 hover:bg-muted/30">
                     <td className="p-3 font-medium">{model.name}</td>
                     <td className="p-3">
@@ -82,7 +136,7 @@ export default async function AdminModelosPage({
                     </td>
                   </tr>
                 ))}
-                {(!models || models.length === 0) && (
+                {models.length === 0 && (
                   <tr>
                     <td colSpan={4} className="p-6 text-center text-muted-foreground">
                       No hay modelos
@@ -96,8 +150,10 @@ export default async function AdminModelosPage({
       </Card>
 
       <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        prevCursor={prevCursor}
+        nextCursor={nextCursor}
         basePath="/admin/modelos"
         searchParams={params}
       />

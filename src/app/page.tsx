@@ -5,34 +5,31 @@ import { createClient } from "@/lib/supabase/server";
 import { ProductCardWrapper } from "@/components/product-card-wrapper";
 import { BannerCarousel } from "@/components/banner-carousel";
 import { BrandShowcase } from "@/components/brand-showcase";
+import { getActiveBanners, getBrands, getSiteName } from "@/lib/data-cache";
+
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data: banners } = await supabase
-    .from("banners")
-    .select("*")
-    .eq("active", true)
-    .order("sort_order", { ascending: true });
+  const [banners, brands, siteName] = await Promise.all([
+    getActiveBanners(),
+    getBrands(),
+    getSiteName(),
+  ]);
+
   const { data: products } = await supabase
     .from("products")
     .select("*, category:categories(*), product_brands(brand:brands(*)), product_car_models(car_model:car_models(*))")
     .eq("featured", true)
     .order("created_at", { ascending: false })
     .limit(8);
-  const { data: brands } = await supabase
-    .from("brands")
-    .select("*")
-    .order("name");
 
   return (
     <div>
-      {/* Banner Carousel */}
-      <BannerCarousel banners={banners ?? []} />
+      <BannerCarousel banners={banners} siteName={siteName} />
 
-      {/* Brand Showcase */}
-      <BrandShowcase brands={brands ?? []} />
+      <BrandShowcase brands={brands} />
 
-      {/* Featured Products */}
       {products && products.length > 0 && (
         <section className="py-16">
           <div className="container mx-auto px-4">

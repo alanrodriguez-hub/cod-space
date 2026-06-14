@@ -234,7 +234,7 @@ export default function PerfilPage() {
             <label className="flex items-start gap-3 cursor-pointer">
               <Checkbox
                 checked={privacyAccepted}
-                onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                onCheckedChange={(checked) => setPrivacyAccepted(checked ?? false)}
                 disabled={!!privacyAcceptedAt}
               />
               <span className="text-sm leading-relaxed">

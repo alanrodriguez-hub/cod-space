@@ -36,7 +36,7 @@ export function AdminOrderFilters({ currentStatus, currentFrom, currentTo }: Pro
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="w-48">
-        <Select value={currentStatus || "__todos__"} onValueChange={(v) => updateFilter("status", v === "__todos__" ? undefined : v)}>
+        <Select value={currentStatus || "__todos__"} onValueChange={(v) => updateFilter("status", v === "__todos__" || !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todos los estados" />
           </SelectTrigger>

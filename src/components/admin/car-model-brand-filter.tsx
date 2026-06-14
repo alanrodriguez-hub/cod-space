@@ -29,7 +29,7 @@ export function CarModelBrandFilter({ brands, currentBrand }: Props) {
   return (
     <div className="flex items-end gap-3">
       <div className="w-48">
-        <Select value={currentBrand || "__todas__"} onValueChange={(v) => updateBrand(v === "__todas__" ? undefined : v)}>
+        <Select value={currentBrand || "__todas__"} onValueChange={(v) => updateBrand(v === "__todas__" || !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todas las marcas" />
           </SelectTrigger>

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/contexts/cart-context";
 import type { Product } from "@/lib/types";
 import { toast } from "sonner";
+import { useState } from "react";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", minimumFractionDigits: 0 }).format(price);
@@ -16,18 +16,18 @@ function formatPrice(price: number) {
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card className="group overflow-hidden">
       <Link href={`/catalogo/${product.id}`}>
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          {product.image_url ? (
-            <Image
+          {product.image_url && !imgError ? (
+            <img
               src={product.image_url}
               alt={product.name}
-              fill
-              className="object-cover transition-transform group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+              onError={() => setImgError(true)}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">

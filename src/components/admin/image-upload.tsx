@@ -19,6 +19,25 @@ export function ImageUpload({ currentUrl, folder, onUpload }: ImageUploadProps) 
   const inputRef = useRef<HTMLInputElement>(null);
   const supabase = createClient();
 
+  function fileToWebP(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Error al convertir a WebP"));
+        }, "image/webp", 0.8);
+      };
+      img.onerror = () => reject(new Error("Error al cargar la imagen"));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -35,28 +54,35 @@ export function ImageUpload({ currentUrl, folder, onUpload }: ImageUploadProps) 
 
     setUploading(true);
 
-    const ext = file.name.split(".").pop();
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    try {
+      const webpBlob = await fileToWebP(file);
+      const webpFile = new File([webpBlob], file.name.replace(/\.[^.]+$/, ".webp"), { type: "image/webp" });
 
-    const { error } = await supabase.storage
-      .from("images")
-      .upload(fileName, file, { upsert: true });
+      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.webp`;
 
-    if (error) {
-      toast.error("Error al subir la imagen");
+      const { error } = await supabase.storage
+        .from("images")
+        .upload(fileName, webpFile, { upsert: true, contentType: "image/webp" });
+
+      if (error) {
+        toast.error("Error al subir la imagen");
+        setUploading(false);
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from("images")
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl;
+      setPreview(publicUrl);
+      onUpload(publicUrl);
+      toast.success("Imagen subida correctamente");
+    } catch {
+      toast.error("Error al procesar la imagen");
+    } finally {
       setUploading(false);
-      return;
     }
-
-    const { data: urlData } = supabase.storage
-      .from("images")
-      .getPublicUrl(fileName);
-
-    const publicUrl = urlData.publicUrl;
-    setPreview(publicUrl);
-    onUpload(publicUrl);
-    setUploading(false);
-    toast.success("Imagen subida correctamente");
   }
 
   function handleRemove() {
@@ -94,7 +120,7 @@ export function ImageUpload({ currentUrl, folder, onUpload }: ImageUploadProps) 
         >
           <ImageIcon className="h-8 w-8" />
           <span className="text-sm">Haz clic para subir una imagen</span>
-          <span className="text-xs">JPG, PNG o WebP (máx. 5MB)</span>
+          <span className="text-xs">JPG, PNG o WebP (se convertirá a WebP)</span>
         </button>
       )}
       <input

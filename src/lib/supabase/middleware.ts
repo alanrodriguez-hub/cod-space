@@ -26,13 +26,20 @@ export async function updateSession(request: NextRequest) {
   );
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  let user = session?.user ?? null;
 
   const protectedPaths = ["/pedidos", "/admin"];
   const isProtected = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
+
+  if (isProtected && user) {
+    const { data } = await supabase.auth.getUser();
+    user = data.user ?? null;
+  }
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone();

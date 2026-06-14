@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono, Roboto } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/contexts/cart-context";
@@ -8,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SocialLinks } from "@/components/social-links";
+import { getSiteName } from "@/lib/data-cache";
 
 const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,16 +21,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "AutoRepuestos - Catálogo de Repuestos de Autos",
-  description: "Encuentra los mejores repuestos para tu auto al mejor precio",
-};
+export async function generateMetadata() {
+  const siteName = await getSiteName();
+  return {
+    title: `${siteName} - Catálogo de Repuestos de Autos`,
+    description: "Encuentra los mejores repuestos para tu auto al mejor precio",
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+    icons: [
+      { rel: "icon", type: "image/svg+xml", url: "/favicon.svg" },
+      { rel: "icon", url: "/favicon.ico" },
+      { rel: "apple-touch-icon", url: "/images/logo-full.png" },
+    ],
+    openGraph: {
+      title: siteName,
+      description: "Encuentra los mejores repuestos para tu auto al mejor precio",
+      images: [{ url: "/images/logo-full.png", width: 5042, height: 3600 }],
+    },
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteName = await getSiteName();
+
   return (
     <html
       lang="es"
@@ -41,12 +57,12 @@ export default function RootLayout({
         <ThemeProvider>
         <UserProvider>
           <CartProvider>
-            <Navbar />
+            <Navbar siteName={siteName} />
             <main className="flex-1">{children}</main>
             <footer className="border-t py-8 mt-auto">
               <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-3">
                 <SocialLinks />
-                <p>© {new Date().getFullYear()} AutoRepuestos. Todos los derechos reservados.</p>
+                <p>© {new Date().getFullYear()} {siteName}. Todos los derechos reservados.</p>
                 <p>
                   <a href="/privacidad" className="underline hover:no-underline">
                     Política de Privacidad

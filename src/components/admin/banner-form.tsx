@@ -146,7 +146,7 @@ export function BannerForm({ editId }: { editId: string | null }) {
             <label className="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 checked={form.active}
-                onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))}
+                onCheckedChange={(checked) => setForm((prev) => ({ ...prev, active: checked ?? false }))}
               />
               <span className="text-sm font-medium">Activo</span>
             </label>

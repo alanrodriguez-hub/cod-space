@@ -7,24 +7,24 @@ import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Banner } from "@/lib/types";
 
-const defaultBanners = [
-  {
-    id: "default-1",
-    title: "Bienvenido a AutoRepuestos",
-    subtitle: "Encuentra los mejores repuestos para tu auto al mejor precio",
-    image_url: "",
-    link_url: "/catalogo",
-  },
-  {
-    id: "default-2",
-    title: "Envío a todo el país",
-    subtitle: "Recibe tus repuestos en la puerta de tu casa",
-    image_url: "",
-    link_url: "/catalogo",
-  },
-];
+export function BannerCarousel({ banners, siteName }: { banners: Banner[]; siteName?: string }) {
+  const defaultBanners = [
+    {
+      id: "default-1",
+      title: `Bienvenido a ${siteName || "tu sitio para tu auto"}`,
+      subtitle: "Encuentra los mejores repuestos para tu auto al mejor precio",
+      image_url: "",
+      link_url: "/catalogo",
+    },
+    {
+      id: "default-2",
+      title: "Envío a todo el país",
+      subtitle: "Recibe tus repuestos en la puerta de tu casa",
+      image_url: "",
+      link_url: "/catalogo",
+    },
+  ];
 
-export function BannerCarousel({ banners }: { banners: Banner[] }) {
   const items = banners.length > 0 ? banners : defaultBanners;
   const [current, setCurrent] = useState(0);
 
