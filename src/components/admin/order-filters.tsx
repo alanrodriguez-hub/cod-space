@@ -36,12 +36,12 @@ export function AdminOrderFilters({ currentStatus, currentFrom, currentTo }: Pro
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="w-48">
-        <Select value={currentStatus || "__todos__"} onValueChange={(v) => updateFilter("status", v === "__todos__" || !v ? undefined : v)}>
+        <Select value={currentStatus || ""} onValueChange={(v) => updateFilter("status", !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todos los estados" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__todos__">Todos los estados</SelectItem>
+            <SelectItem value="">Todos los estados</SelectItem>
             <SelectItem value="pending">Pendiente</SelectItem>
             <SelectItem value="confirmed">Confirmado</SelectItem>
             <SelectItem value="completed">Completado</SelectItem>

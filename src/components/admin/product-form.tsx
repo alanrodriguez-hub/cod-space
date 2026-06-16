@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -239,13 +247,12 @@ export function ProductForm({ editId }: { editId: string | null }) {
           </div>
           <div className="md:col-span-2">
             <Label htmlFor="description">Descripcion</Label>
-            <textarea
+            <Textarea
               id="description"
               name="description"
               value={form.description}
               onChange={handleChange}
               rows={3}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
           </div>
           <div>
@@ -258,18 +265,26 @@ export function ProductForm({ editId }: { editId: string | null }) {
           </div>
           <div>
             <Label htmlFor="category_id">Categoria</Label>
-            <select
-              id="category_id"
-              name="category_id"
-              value={form.category_id}
-              onChange={handleChange}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <Select
+              value={form.category_id || "__sin_categoria__"}
+              onValueChange={(val) => {
+                const safeVal = val ?? "";
+                setForm((prev) => ({
+                  ...prev,
+                  category_id: safeVal === "__sin_categoria__" ? "" : safeVal,
+                }));
+              }}
             >
-              <option value="">Sin categoria</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
+              <SelectTrigger id="category_id" className="w-full">
+                <SelectValue placeholder="Sin categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__sin_categoria__">Sin categoria</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="md:col-span-2">

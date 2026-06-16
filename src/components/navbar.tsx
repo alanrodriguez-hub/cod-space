@@ -11,6 +11,15 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Navbar({ siteName }: { siteName: string }) {
   const { totalItems } = useCart();
@@ -63,17 +72,40 @@ export function Navbar({ siteName }: { siteName: string }) {
             )}
           </Link>
           {user ? (
-            <>
-              <Link href="/perfil" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                Mi Perfil
-              </Link>
-              <Link href="/pedidos" className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                Mis Pedidos
-              </Link>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="relative rounded-full">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Menú de usuario</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">Mi Cuenta</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/perfil" className="cursor-pointer w-full flex items-center" />}>
+                  Mi Perfil
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<Link href="/pedidos" className="cursor-pointer w-full flex items-center" />}>
+                  Mis Pedidos
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Cerrar Sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link href="/auth/login" className={buttonVariants({ variant: "ghost", size: "icon" })}>
               <User className="h-5 w-5" />

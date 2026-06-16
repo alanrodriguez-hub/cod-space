@@ -3,6 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserRoleToggle } from "@/components/admin/user-role-toggle";
 import { UserAccessHistory } from "@/components/admin/user-access-history";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function formatDate(date: string | null) {
   if (!date) return "Nunca";
@@ -22,73 +30,71 @@ export default async function AdminUsuariosPage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium">Email</th>
-                  <th className="text-left p-3 font-medium">Nombre</th>
-                  <th className="text-left p-3 font-medium">Teléfono</th>
-                  <th className="text-left p-3 font-medium">RUT</th>
-                  <th className="text-left p-3 font-medium">Dirección</th>
-                  <th className="text-left p-3 font-medium">Rol</th>
-                  <th className="text-left p-3 font-medium">Privacidad</th>
-                  <th className="text-left p-3 font-medium">Último acceso</th>
-                  <th className="text-left p-3 font-medium">Registrado</th>
-                  <th className="text-left p-3 font-medium">Historial</th>
-                  <th className="text-left p-3 font-medium">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {profiles?.map((profile) => (
-                  <tr key={profile.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3">{profile.email}</td>
-                    <td className="p-3">{profile.full_name || <span className="text-muted-foreground">—</span>}</td>
-                    <td className="p-3">{profile.phone || <span className="text-muted-foreground">—</span>}</td>
-                    <td className="p-3">{profile.rut || <span className="text-muted-foreground">—</span>}</td>
-                    <td className="p-3 max-w-48">
-                      {profile.address_street ? (
-                        <span className="text-xs">
-                          {profile.address_street}, {profile.address_city}
-                          {profile.address_region ? `, ${profile.address_region}` : ""}
-                          {profile.address_zip ? ` (${profile.address_zip})` : ""}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </td>
-                    <td className="p-3">
-                      <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
-                        {profile.role === "admin" ? "Admin" : "Cliente"}
-                      </Badge>
-                    </td>
-                    <td className="p-3">
-                      {profile.privacy_accepted_at ? (
-                        <Badge variant="outline" className="text-xs">Aceptada</Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">Pendiente</span>
-                      )}
-                    </td>
-                    <td className="p-3 text-muted-foreground">{formatDate(profile.last_sign_in_at)}</td>
-                    <td className="p-3 text-muted-foreground">{formatDate(profile.created_at)}</td>
-                    <td className="p-3">
-                      <UserAccessHistory userId={profile.id} email={profile.email} />
-                    </td>
-                    <td className="p-3">
-                      <UserRoleToggle userId={profile.id} currentRole={profile.role} email={profile.email} />
-                    </td>
-                  </tr>
-                ))}
-                {(!profiles || profiles.length === 0) && (
-                  <tr>
-                    <td colSpan={11} className="p-6 text-center text-muted-foreground">
-                      No hay usuarios registrados
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Email</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Teléfono</TableHead>
+                <TableHead>RUT</TableHead>
+                <TableHead>Dirección</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Privacidad</TableHead>
+                <TableHead>Último acceso</TableHead>
+                <TableHead>Registrado</TableHead>
+                <TableHead>Historial</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {profiles?.map((profile) => (
+                <TableRow key={profile.id}>
+                  <TableCell>{profile.email}</TableCell>
+                  <TableCell>{profile.full_name || <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell>{profile.phone || <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell>{profile.rut || <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell className="max-w-48">
+                    {profile.address_street ? (
+                      <span className="text-xs">
+                        {profile.address_street}, {profile.address_city}
+                        {profile.address_region ? `, ${profile.address_region}` : ""}
+                        {profile.address_zip ? ` (${profile.address_zip})` : ""}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={profile.role === "admin" ? "default" : "secondary"}>
+                      {profile.role === "admin" ? "Admin" : "Cliente"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {profile.privacy_accepted_at ? (
+                      <Badge variant="outline" className="text-xs">Aceptada</Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">Pendiente</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(profile.last_sign_in_at)}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatDate(profile.created_at)}</TableCell>
+                  <TableCell>
+                    <UserAccessHistory userId={profile.id} email={profile.email} />
+                  </TableCell>
+                  <TableCell>
+                    <UserRoleToggle userId={profile.id} currentRole={profile.role} email={profile.email} />
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!profiles || profiles.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={11} className="h-24 text-center text-muted-foreground">
+                    No hay usuarios registrados
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

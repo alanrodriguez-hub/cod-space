@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
+import { Geist, Geist_Mono, Roboto, Figtree } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/contexts/cart-context";
 import { UserProvider } from "@/contexts/user-context";
@@ -7,9 +7,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SocialLinks } from "@/components/social-links";
+import { Footer } from "@/components/footer";
 import { getSiteName } from "@/lib/data-cache";
 
-const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
+const figtree = Figtree({subsets:['latin'],variable:'--font-sans'});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -50,7 +51,7 @@ export default async function RootLayout({
   return (
     <html
       lang="es"
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", roboto.variable)}
+      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", figtree.variable)}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
@@ -59,17 +60,7 @@ export default async function RootLayout({
           <CartProvider>
             <Navbar siteName={siteName} />
             <main className="flex-1">{children}</main>
-            <footer className="border-t py-8 mt-auto">
-              <div className="container mx-auto px-4 text-center text-sm text-muted-foreground space-y-3">
-                <SocialLinks />
-                <p>© {new Date().getFullYear()} {siteName}. Todos los derechos reservados.</p>
-                <p>
-                  <a href="/privacidad" className="underline hover:no-underline">
-                    Política de Privacidad
-                  </a>
-                </p>
-              </div>
-            </footer>
+            <Footer siteName={siteName} />
             <Toaster />
           </CartProvider>
         </UserProvider>

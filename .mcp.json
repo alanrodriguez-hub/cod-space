@@ -3,6 +3,10 @@
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=zmleythqmafzfvomwjfy&features=storage%2Cbranchi\n  ng%2Cfunctions%2Cdevelopment%2Cdebugging%2Cdatabase%2Caccount"
+    },
+    "shadcn": {
+      "command": "npx",
+      "args": ["-y", "shadcn@latest", "mcp"]
     }
   }
 }

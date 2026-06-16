@@ -48,12 +48,12 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
   return (
     <div className="flex flex-wrap items-end gap-3">
       <div className="w-48">
-        <Select value={currentCategory || "__todas_categorias__"} onValueChange={(v) => updateFilter("category", v === "__todas_categorias__" || !v ? undefined : v)}>
+        <Select value={currentCategory || ""} onValueChange={(v) => updateFilter("category", !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todas las categorías" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__todas_categorias__">Todas las categorías</SelectItem>
+            <SelectItem value="">Todas las categorías</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
             ))}
@@ -62,12 +62,12 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
       </div>
 
       <div className="w-48">
-        <Select value={currentBrand || "__todas_marcas__"} onValueChange={(v) => updateFilter("brand", v === "__todas_marcas__" || !v ? undefined : v)}>
+        <Select value={currentBrand || ""} onValueChange={(v) => updateFilter("brand", !v ? undefined : v)}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Todas las marcas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__todas_marcas__">Todas las marcas</SelectItem>
+            <SelectItem value="">Todas las marcas</SelectItem>
             {brands.map((b) => (
               <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
             ))}

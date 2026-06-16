@@ -117,10 +117,16 @@ export default async function CatalogoPage({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Catalogo de Repuestos</h1>
-      <div className="flex flex-col md:flex-row gap-8">
-        <aside className="w-full md:w-64 shrink-0">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Catálogo de Repuestos</h1>
+          <p className="text-sm text-muted-foreground mt-1">Busca y filtra repuestos de alta calidad para marcas chinas</p>
+        </div>
+      </div>
+
+      <div className="space-y-8">
+        <div className="bg-background border rounded-xl p-3 shadow-xs">
           <CatalogoFilters
             categories={categories}
             brands={brands}
@@ -129,11 +135,12 @@ export default async function CatalogoPage({
             currentModel={params.model}
             currentQuery={params.q}
           />
-        </aside>
-        <div className="flex-1">
+        </div>
+
+        <div>
           {products.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {products.map((product) => (
                   <ProductCardWrapper key={product.id} product={product} />
                 ))}
