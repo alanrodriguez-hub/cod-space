@@ -11,6 +11,7 @@ const statuses = [
   { value: "pending", label: "Pendiente", color: "bg-yellow-100 text-yellow-800 border-yellow-300" },
   { value: "confirmed", label: "Confirmado", color: "bg-blue-100 text-blue-800 border-blue-300" },
   { value: "completed", label: "Completado", color: "bg-green-100 text-green-800 border-green-300" },
+  { value: "cancelled", label: "Cancelado", color: "bg-red-100 text-red-800 border-red-300" },
 ];
 
 export function OrderStatusForm({ orderId, currentStatus }: { orderId: string; currentStatus: string }) {

@@ -106,6 +106,17 @@ export default async function AdminOrderDetailPage({
           </Card>
 
           <Card>
+            <CardContent className="p-6 space-y-2">
+              <h2 className="font-semibold">Método de Pago</h2>
+              <div className="pt-1 border-t">
+                <Badge variant={order.payment_method === "transfer" ? "default" : "secondary"} className="capitalize">
+                  {order.payment_method === "transfer" ? "Transferencia" : "Efectivo"}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
             <CardContent className="p-6 space-y-4">
               <h2 className="font-semibold">Cambiar Estado</h2>
               <OrderStatusForm orderId={order.id} currentStatus={order.status} />

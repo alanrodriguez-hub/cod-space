@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
 import { Search, Upload, CheckCircle2, XCircle, Loader2, ImageIcon, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import Image from "next/image";
 
 interface Product {
   id: string;
@@ -206,8 +205,17 @@ export function BatchImageUploader() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {withImage.map((p) => (
                       <div key={p.id} className="flex items-center gap-2 p-2 rounded-lg border text-sm">
-                        <div className="relative w-10 h-10 rounded overflow-hidden bg-muted shrink-0">
-                          <Image src={p.image_url!} alt="" fill className="object-cover" sizes="40px" />
+                        <div className="relative w-10 h-10 rounded overflow-hidden bg-muted shrink-0 flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={p.image_url!}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback display if image fails to load
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
                         </div>
                         <span className="truncate flex-1">{p.name}</span>
                         <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />

@@ -43,8 +43,9 @@ export interface CartItem {
 export interface Order {
   id: string;
   user_id: string;
-  status: "pending" | "confirmed" | "completed";
+  status: "pending" | "confirmed" | "completed" | "cancelled";
   total: number;
+  payment_method: "cash" | "transfer";
   created_at: string;
   order_items?: OrderItem[];
 }

@@ -1,4 +1,8 @@
--- RPC transaccional: crea orden, items y descuenta stock en una sola transacción
+-- Add payment_method column to public.orders table if it doesn't exist
+alter table public.orders 
+add column if not exists payment_method text not null default 'cash' check (payment_method in ('cash', 'transfer'));
+
+-- Overwrite create_order to accept p_payment_method
 create or replace function create_order(
   p_user_id uuid,
   p_items jsonb,
@@ -40,7 +44,7 @@ begin
     v_total := v_total + (v_quantity * v_unit_price);
   end loop;
 
-  -- Crear orden
+  -- Crear orden con el método de pago recibido
   insert into orders (user_id, total, status, payment_method)
   values (p_user_id, v_total, 'pending', p_payment_method)
   returning id into v_order_id;

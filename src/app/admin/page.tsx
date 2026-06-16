@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Users, Package, FolderTree, DollarSign, Clock, CheckCircle, CircleDot } from "lucide-react";
+import { ShoppingBag, Users, Package, FolderTree, DollarSign, Clock, CheckCircle, CircleDot, XCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminDashboard() {
@@ -14,6 +14,7 @@ export default async function AdminDashboard() {
     { count: pendingOrders },
     { count: confirmedOrders },
     { count: completedOrders },
+    { count: cancelledOrders },
     { data: recentOrders },
   ] = await Promise.all([
     supabase.from("products").select("*", { count: "exact", head: true }),
@@ -22,6 +23,7 @@ export default async function AdminDashboard() {
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "pending"),
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "confirmed"),
     supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "completed"),
+    supabase.from("orders").select("*", { count: "exact", head: true }).eq("status", "cancelled"),
     supabase.from("orders").select("id, user_id, total, status, created_at").order("created_at", { ascending: false }).limit(5),
   ]);
 
@@ -41,12 +43,14 @@ export default async function AdminDashboard() {
     { label: "Pendientes", value: pendingOrders ?? 0, icon: Clock, color: "text-yellow-600", bg: "border-yellow-500/30 bg-yellow-50 dark:bg-yellow-950/20", href: "/admin/pedidos?status=pending" },
     { label: "Confirmados", value: confirmedOrders ?? 0, icon: CircleDot, color: "text-blue-600", bg: "border-blue-500/30 bg-blue-50 dark:bg-blue-950/20", href: "/admin/pedidos?status=confirmed" },
     { label: "Completados", value: completedOrders ?? 0, icon: CheckCircle, color: "text-green-600", bg: "border-green-500/30 bg-green-50 dark:bg-green-950/20", href: "/admin/pedidos?status=completed" },
+    { label: "Cancelados", value: cancelledOrders ?? 0, icon: XCircle, color: "text-red-600", bg: "border-red-500/30 bg-red-50 dark:bg-red-950/20", href: "/admin/pedidos?status=cancelled" },
   ];
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-500 hover:bg-yellow-600 text-white",
     confirmed: "bg-blue-500 hover:bg-blue-600 text-white",
     completed: "bg-green-500 hover:bg-green-600 text-white",
+    cancelled: "bg-red-500 hover:bg-red-600 text-white",
   };
 
   const formatPrice = (price: number) =>
@@ -59,6 +63,7 @@ export default async function AdminDashboard() {
     pending: "Pendiente",
     confirmed: "Confirmado",
     completed: "Completado",
+    cancelled: "Cancelado",
   };
 
   return (

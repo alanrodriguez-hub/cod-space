@@ -31,12 +31,14 @@ const statusColors: Record<string, string> = {
   pending: "bg-yellow-500 hover:bg-yellow-600 text-white",
   confirmed: "bg-blue-500 hover:bg-blue-600 text-white",
   completed: "bg-green-500 hover:bg-green-600 text-white",
+  cancelled: "bg-red-500 hover:bg-red-600 text-white",
 };
 
 const statusLabels: Record<string, string> = {
   pending: "Pendiente",
   confirmed: "Confirmado",
   completed: "Completado",
+  cancelled: "Cancelado",
 };
 
 export default async function AdminPedidosPage({
@@ -89,9 +91,9 @@ export default async function AdminPedidosPage({
 
   const { data: rawOrders } = await query.limit(PAGE_SIZE + 1);
 
-  let orders = rawOrders ?? [];
+  const orders = rawOrders ?? [];
   let hasNext = false;
-  let hasPrev = Boolean(after || before);
+  const hasPrev = Boolean(after || before);
   let nextCursor: string | undefined;
   let prevCursor: string | undefined;
 
@@ -144,6 +146,7 @@ export default async function AdminPedidosPage({
                   <th className="text-left p-3 font-medium">Correo</th>
                   <th className="text-left p-3 font-medium">Items</th>
                   <th className="text-left p-3 font-medium">Total</th>
+                  <th className="text-left p-3 font-medium">Método</th>
                   <th className="text-left p-3 font-medium">Estado</th>
                   <th className="text-left p-3 font-medium">Fecha</th>
                   <th className="text-left p-3 font-medium">Acciones</th>
@@ -159,6 +162,11 @@ export default async function AdminPedidosPage({
                       <td className="p-3 text-muted-foreground">{profile?.email ?? "—"}</td>
                       <td className="p-3">{(order.order_items as { id: string }[])?.length ?? 0}</td>
                       <td className="p-3 font-medium">{formatPrice(order.total)}</td>
+                      <td className="p-3">
+                        <Badge variant="outline" className="capitalize">
+                          {order.payment_method === "transfer" ? "Transferencia" : "Efectivo"}
+                        </Badge>
+                      </td>
                       <td className="p-3">
                         <Badge className={statusColors[order.status] ?? statusColors.pending}>
                           {statusLabels[order.status] ?? order.status}

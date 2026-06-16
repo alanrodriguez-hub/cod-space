@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, MapPin, Banknote, Landmark } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -11,7 +11,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { MapPin } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 function formatPrice(price: number) {
@@ -23,6 +22,7 @@ export default function CarritoPage() {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [address, setAddress] = useState<{ street: string; city: string; region: string; zip: string } | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer">("cash");
   const router = useRouter();
   const supabase = createClient();
 
@@ -64,9 +64,33 @@ export default function CarritoPage() {
       const { data, error } = await supabase.rpc("create_order", {
         p_user_id: user.id,
         p_items: orderItems,
+        p_payment_method: paymentMethod,
       });
 
       if (error) throw error;
+
+      // Disparar envío de correo en segundo plano (asíncrono)
+      if (data && data.order_id) {
+        fetch("/api/send-order-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId: data.order_id,
+            userEmail: user.email,
+            userName: user.user_metadata?.full_name || user.email?.split("@")[0] || "Cliente",
+            paymentMethod: paymentMethod,
+            total: totalPrice,
+            items: items.map((item) => ({
+              name: item.product.name,
+              brand: item.product.brand,
+              quantity: item.quantity,
+              price: item.product.price,
+            })),
+          }),
+        }).catch((err) => console.error("Error al enviar correo de confirmación:", err));
+      }
 
       clearCart();
       toast.success("Pedido enviado exitosamente");
@@ -181,6 +205,103 @@ export default function CarritoPage() {
                         </Link>
                       </div>
                     )}
+                  </div>
+
+                  <Separator />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Banknote className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-sm">Método de Pago</span>
+                    </div>
+                    
+                    <div className="border rounded-lg overflow-hidden divide-y">
+                      {/* Efectivo */}
+                      <div 
+                        onClick={() => setPaymentMethod("cash")}
+                        className={`p-3 cursor-pointer transition-colors flex items-center justify-between ${
+                          paymentMethod === "cash" ? "bg-primary/5" : "hover:bg-muted"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Banknote className="h-4 w-4 text-primary shrink-0" />
+                          <div className="text-left">
+                            <p className="text-sm font-medium">Pago en Efectivo</p>
+                            <p className="text-[11px] text-muted-foreground">Paga al retirar o al recibir el envío</p>
+                          </div>
+                        </div>
+                        <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          paymentMethod === "cash" ? "border-primary bg-primary" : "border-muted-foreground/50"
+                        }`}>
+                          {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+
+                      {/* Transferencia */}
+                      <div>
+                        <div 
+                          onClick={() => setPaymentMethod("transfer")}
+                          className={`p-3 cursor-pointer transition-colors flex items-center justify-between ${
+                            paymentMethod === "transfer" ? "bg-primary/5" : "hover:bg-muted"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Landmark className="h-4 w-4 text-primary shrink-0" />
+                            <div className="text-left">
+                              <p className="text-sm font-medium">Transferencia Electrónica</p>
+                              <p className="text-[11px] text-muted-foreground">Transfiere directamente a nuestra cuenta</p>
+                            </div>
+                          </div>
+                          <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                            paymentMethod === "transfer" ? "border-primary bg-primary" : "border-muted-foreground/50"
+                          }`}>
+                            {paymentMethod === "transfer" && <div className="h-2 w-2 rounded-full bg-white" />}
+                          </div>
+                        </div>
+
+                        {/* Contenido Acordeón Transferencia */}
+                        <div 
+                          className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                            paymentMethod === "transfer" ? "max-h-[300px] border-t" : "max-h-0"
+                          }`}
+                        >
+                          <div className="p-3 bg-muted/40 text-[11px] space-y-1.5 border-l-2 border-primary">
+                            <p className="font-semibold text-muted-foreground mb-1">Datos para Transferencia:</p>
+                            <div className="grid grid-cols-3 gap-y-1 text-muted-foreground">
+                              <span className="font-medium">Nombre:</span>
+                              <span className="col-span-2 text-foreground font-semibold">
+                                {process.env.NEXT_PUBLIC_TRANSFER_COMPANY_NAME || "Importadora y Distribuidora CodSpace Ltda."}
+                              </span>
+                              
+                              <span className="font-medium">RUT:</span>
+                              <span className="col-span-2 text-foreground font-semibold">
+                                {process.env.NEXT_PUBLIC_TRANSFER_COMPANY_RUT || "76.123.456-K"}
+                              </span>
+                              
+                              <span className="font-medium">Banco:</span>
+                              <span className="col-span-2 text-foreground font-semibold">Banco de Chile</span>
+                              
+                              <span className="font-medium">Cuenta:</span>
+                              <span className="col-span-2 text-foreground font-semibold">
+                                {process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_TYPE || "Cuenta Corriente"}
+                              </span>
+                              
+                              <span className="font-medium">Nº Cuenta:</span>
+                              <span className="col-span-2 text-foreground font-semibold font-mono">
+                                {process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_NUMBER || "12-34567-89"}
+                              </span>
+                              
+                              <span className="font-medium">Email:</span>
+                              <span className="col-span-2 text-foreground font-semibold break-all">
+                                {process.env.NEXT_PUBLIC_TRANSFER_EMAIL || "pagos@codspace.cl"}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-1.5 italic leading-snug">
+                              * Envía el comprobante de transferencia a nuestro correo indicando tu número de pedido.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </>
               )}

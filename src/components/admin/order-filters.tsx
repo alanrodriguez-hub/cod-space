@@ -45,6 +45,7 @@ export function AdminOrderFilters({ currentStatus, currentFrom, currentTo }: Pro
             <SelectItem value="pending">Pendiente</SelectItem>
             <SelectItem value="confirmed">Confirmado</SelectItem>
             <SelectItem value="completed">Completado</SelectItem>
+            <SelectItem value="cancelled">Cancelado</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "www.carlogos.org" },
       { protocol: "https", hostname: "upload.wikimedia.org" },
+      { protocol: "https", hostname: "www.mercadolibre.cl" },
+      { protocol: "https", hostname: "*.mlstatic.com" },
     ],
   },
 };

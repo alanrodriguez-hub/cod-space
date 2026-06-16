@@ -3,9 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { ShoppingCart, User, LogOut, Menu, X, Search, Shield } from "lucide-react";
+import { ShoppingCart, User, LogOut, Menu, X, Shield, MapPin } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useCart } from "@/contexts/cart-context";
 import { useUser } from "@/contexts/user-context";
 import { createClient } from "@/lib/supabase/client";
@@ -17,18 +16,8 @@ export function Navbar({ siteName }: { siteName: string }) {
   const { totalItems } = useCart();
   const { user, isAdmin } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const router = useRouter();
   const supabase = createClient();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim()) {
-      router.push(`/catalogo?q=${encodeURIComponent(search.trim())}`);
-      setSearch("");
-      setMenuOpen(false);
-    }
-  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -43,19 +32,19 @@ export function Navbar({ siteName }: { siteName: string }) {
           <Image src="/images/logo-vector-full.svg" alt={siteName} height={36} width={108} priority unoptimized />
         </Link>
 
-        <div className="hidden md:flex items-center gap-6">
+        <div className="hidden md:flex items-center gap-5">
           <Link href="/catalogo" className="text-sm font-medium hover:text-primary transition-colors">
             Catálogo
           </Link>
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar repuestos..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 w-64"
-            />
-          </form>
+          <a
+            href={process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 hover:bg-primary/10 border border-primary/10 text-primary transition-all text-xs font-semibold group"
+          >
+            <MapPin className="h-3.5 w-3.5 text-primary group-hover:scale-110 transition-transform" />
+            <span>Nuestra Sucursal</span>
+          </a>
         </div>
 
         <div className="hidden md:flex items-center gap-2">
@@ -111,13 +100,19 @@ export function Navbar({ siteName }: { siteName: string }) {
 
       {menuOpen && (
         <div className="md:hidden border-t p-4 space-y-3 bg-background">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar repuestos..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8" />
-          </form>
           <Link href="/catalogo" className="block text-sm font-medium py-2" onClick={() => setMenuOpen(false)}>
             Catálogo
           </Link>
+          <a
+            href={process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/10 text-primary transition-colors text-sm font-semibold w-full"
+            onClick={() => setMenuOpen(false)}
+          >
+            <MapPin className="h-4 w-4 text-primary" />
+            <span>Nuestra Sucursal</span>
+          </a>
           {isAdmin && (
             <Link href="/admin" className="flex items-center gap-2 text-sm font-medium py-2 text-primary" onClick={() => setMenuOpen(false)}>
               <Shield className="h-4 w-4" /> Panel Admin
