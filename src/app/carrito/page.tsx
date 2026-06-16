@@ -278,7 +278,7 @@ export default function CarritoPage() {
                               </span>
                               
                               <span className="font-medium">Banco:</span>
-                              <span className="col-span-2 text-foreground font-semibold">Banco de Chile</span>
+                              <span className="col-span-2 text-foreground font-semibold">{process.env.NEXT_PUBLIC_TRANSFER_BANK_NAME || "Banco de Chile"}</span>
                               
                               <span className="font-medium">Cuenta:</span>
                               <span className="col-span-2 text-foreground font-semibold">
