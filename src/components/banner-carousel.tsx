@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import type { Banner } from "@/lib/types";
 
 export function BannerCarousel({ banners, siteName }: { banners: Banner[]; siteName?: string }) {
@@ -86,13 +86,11 @@ export function BannerCarousel({ banners, siteName }: { banners: Banner[]; siteN
                   )}
                   {item.link_url && (
                     <div className="pt-1 sm:pt-2">
-                      <Link href={item.link_url}>
-                        <Button
-                          size="lg"
-                          className="shadow-md hover:shadow-lg transition-all font-semibold h-8 sm:h-9 text-xs sm:text-sm px-4 sm:px-6 cursor-pointer"
-                        >
-                          Ver más
-                        </Button>
+                      <Link
+                        href={item.link_url}
+                        className={buttonVariants({ size: "lg", className: "shadow-md hover:shadow-lg transition-all font-semibold h-8 sm:h-9 text-xs sm:text-sm px-4 sm:px-6 cursor-pointer" })}
+                      >
+                        Ver más
                       </Link>
                     </div>
                   )}

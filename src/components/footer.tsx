@@ -10,9 +10,9 @@ interface FooterProps {
 }
 
 export function Footer({ siteName }: FooterProps) {
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contacto@codspace.cl";
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contacto@midiminio.cl";
   const contactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+56 9 1234 5678";
-  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Av. Nueva Providencia 1881, Providencia, Santiago";
+  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Mi dirección";
   const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com";
 
   return (
@@ -113,7 +113,7 @@ export function Footer({ siteName }: FooterProps) {
             © {new Date().getFullYear()} {siteName}. Todos los derechos reservados.
           </p>
           <p className="text-[10px] opacity-75">
-            Desarrollado con ❤️ para repuestos de marcas chinas en Chile.
+            Desarrollado con ❤️
           </p>
         </div>
       </div>
