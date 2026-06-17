@@ -5,10 +5,17 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { Mail } from "lucide-react";
+import { Mail, KeyRound, Loader2, Send, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const MAX_ATTEMPTS = 5;
@@ -16,7 +23,16 @@ const WINDOW_MINUTES = 15;
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto px-4 py-20 flex justify-center"><p className="text-muted-foreground">Cargando...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-20 flex justify-center items-center min-h-[calc(100vh-16rem)]">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground text-sm font-medium">Cargando...</p>
+          </div>
+        </div>
+      }
+    >
       <LoginForm />
     </Suspense>
   );
@@ -100,45 +116,77 @@ function LoginForm() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-20 flex justify-center">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-6 space-y-6">
-          <div className="text-center">
-            <Mail className="h-12 w-12 mx-auto text-primary mb-4" />
-            <h1 className="text-2xl font-bold">Iniciar Sesión</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              {sent
-                ? "Ingresa el código que enviamos a tu email"
-                : "Te enviaremos un código de acceso a tu email"}
-            </p>
+    <div className="container mx-auto px-4 py-20 flex justify-center items-center min-h-[calc(100vh-16rem)]">
+      <Card className="w-full max-w-md shadow-lg border-muted/50 overflow-hidden transition-all duration-300">
+        <CardHeader className="space-y-1 pt-8">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-primary/10 p-4 text-primary ring-8 ring-primary/5 transition-all duration-300">
+              {sent ? (
+                <KeyRound className="h-8 w-8 animate-pulse text-primary" />
+              ) : (
+                <Mail className="h-8 w-8 text-primary" />
+              )}
+            </div>
           </div>
+          <CardTitle className="text-2xl font-bold text-center tracking-tight">
+            {sent ? "Ingresar Código" : "Iniciar Sesión"}
+          </CardTitle>
+          <CardDescription className="text-center text-sm text-muted-foreground pt-1.5 px-2">
+            {sent ? (
+              <span>
+                Hemos enviado un código de acceso de un solo uso a{" "}
+                <span className="font-semibold text-foreground break-all">{email}</span>
+              </span>
+            ) : (
+              "Ingresa tu email y te enviaremos un código para iniciar sesión al instante sin contraseña."
+            )}
+          </CardDescription>
+        </CardHeader>
 
+        <CardContent className="space-y-4 pb-8">
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Correo Electrónico
+                </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="tu@email.com"
+                  placeholder="ejemplo@correo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="h-10 text-base"
+                  disabled={loading}
+                  autoComplete="email"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Enviando..." : "Enviar Código"}
+              <Button type="submit" size="lg" className="w-full cursor-pointer h-10 font-semibold" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    Enviar Código
+                  </>
+                )}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div>
-                <Label htmlFor="token">Código de verificación</Label>
+              <div className="space-y-2">
+                <Label htmlFor="token" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Código de Verificación
+                </Label>
                 <Input
                   id="token"
                   name="token"
                   type="text"
-                  placeholder="12345678"
+                  placeholder="••••••••"
                   value={token}
                   onChange={(e) => {
                     const v = e.target.value.replace(/\D/g, "");
@@ -148,23 +196,45 @@ function LoginForm() {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   required
-                  className="text-center text-2xl tracking-widest"
+                  className="text-center text-2xl font-mono tracking-[0.4em] h-12 placeholder:opacity-40"
+                  disabled={loading}
+                  autoFocus
                 />
+                <p className="text-[11px] text-muted-foreground text-center">
+                  El código tiene usualmente 6 u 8 dígitos y expira rápidamente.
+                </p>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Verificando..." : "Verificar Código"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => setSent(false)}
-              >
-                Cambiar email
+              <Button type="submit" size="lg" className="w-full cursor-pointer h-10 font-semibold" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verificando...
+                  </>
+                ) : (
+                  "Verificar e Iniciar Sesión"
+                )}
               </Button>
             </form>
           )}
         </CardContent>
+
+        {sent && (
+          <CardFooter className="flex justify-center border-t bg-muted/20 px-6 py-4">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-foreground hover:bg-transparent p-0 cursor-pointer h-auto"
+              onClick={() => {
+                setSent(false);
+                setToken("");
+              }}
+            >
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+              ¿No es tu correo? Cambiar email
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );

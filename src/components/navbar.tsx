@@ -38,7 +38,15 @@ export function Navbar({ siteName }: { siteName: string }) {
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/images/logo-vector-full.svg" alt={siteName} height={36} width={108} priority unoptimized />
+          <Image
+            src="/images/logo-vector-full.svg"
+            alt={siteName}
+            height={36}
+            width={108}
+            priority
+            unoptimized
+            style={{ height: "auto" }}
+          />
         </Link>
 
         <div className="hidden md:flex items-center gap-5">
