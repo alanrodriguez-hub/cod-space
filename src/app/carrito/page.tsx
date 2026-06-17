@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2, ShoppingBag, MapPin, Banknote, Landmark } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, MapPin, Banknote, Landmark, Store, Clock, AlertTriangle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -23,8 +23,17 @@ export default function CarritoPage() {
   const [user, setUser] = useState<User | null>(null);
   const [address, setAddress] = useState<{ street: string; city: string; region: string; zip: string } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer">("cash");
+  const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping");
   const router = useRouter();
   const supabase = createClient();
+
+  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS;
+  const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL;
+  const weekdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_WEEKDAY || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
+  const saturdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_SATURDAY || "Sábados: 9:00 a 13:00";
+
+  const hasAddress = !!(address?.street && address?.city);
+  const effectiveDelivery: "shipping" | "pickup" = deliveryMethod === "shipping" && !hasAddress ? "pickup" : deliveryMethod;
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -65,11 +74,11 @@ export default function CarritoPage() {
         p_user_id: user.id,
         p_items: orderItems,
         p_payment_method: paymentMethod,
+        p_delivery_method: effectiveDelivery,
       });
 
       if (error) throw error;
 
-      // Disparar envío de correo en segundo plano (asíncrono)
       if (data && data.order_id) {
         fetch("/api/send-order-email", {
           method: "POST",
@@ -81,6 +90,7 @@ export default function CarritoPage() {
             userEmail: user.email,
             userName: user.user_metadata?.full_name || user.email?.split("@")[0] || "Cliente",
             paymentMethod: paymentMethod,
+            deliveryMethod: effectiveDelivery,
             total: totalPrice,
             items: items.map((item) => ({
               name: item.product.name,
@@ -180,9 +190,114 @@ export default function CarritoPage() {
                 <span>Total</span>
                 <span className="text-primary">{formatPrice(totalPrice)}</span>
               </div>
+
               {user && (
                 <>
                   <Separator />
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-sm">Método de Entrega</span>
+                    </div>
+
+                    <div className="border rounded-lg overflow-hidden divide-y">
+                      {/* Retiro en Tienda */}
+                      <div
+                        onClick={() => setDeliveryMethod("pickup")}
+                        className={`p-3 cursor-pointer transition-colors flex items-center justify-between ${
+                          effectiveDelivery === "pickup" ? "bg-primary/5" : "hover:bg-muted"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Store className="h-4 w-4 text-primary shrink-0" />
+                          <div className="text-left">
+                            <p className="text-sm font-medium">Retiro en Tienda</p>
+                            <p className="text-[11px] text-muted-foreground">Retira personalmente sin costo</p>
+                          </div>
+                        </div>
+                        <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          effectiveDelivery === "pickup" ? "border-primary bg-primary" : "border-muted-foreground/50"
+                        }`}>
+                          {effectiveDelivery === "pickup" && <div className="h-2 w-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+
+                      {/* Envío a Domicilio */}
+                      <div
+                        onClick={() => {
+                          if (!hasAddress) {
+                            toast.error("Debes registrar una dirección de envío en tu perfil.");
+                            return;
+                          }
+                          setDeliveryMethod("shipping");
+                        }}
+                        className={`p-3 cursor-pointer transition-colors flex items-center justify-between ${
+                          !hasAddress ? "opacity-50 cursor-not-allowed" : ""
+                        } ${
+                          effectiveDelivery === "shipping" ? "bg-primary/5" : "hover:bg-muted"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <MapPin className="h-4 w-4 text-primary shrink-0" />
+                          <div className="text-left">
+                            <p className="text-sm font-medium">Envío a Domicilio</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {hasAddress ? "Recibe en tu dirección registrada" : "Registra tu dirección para activar"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          effectiveDelivery === "shipping" ? "border-primary bg-primary" : "border-muted-foreground/50"
+                        }`}>
+                          {effectiveDelivery === "shipping" && <div className="h-2 w-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                    </div>
+
+                    {!hasAddress && effectiveDelivery === "pickup" && (
+                      <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 p-3">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div className="text-xs text-amber-700 dark:text-amber-300">
+                          <p className="font-medium mb-0.5">Retiro en tienda seleccionado</p>
+                          <p>No tienes dirección de envío registrada. Solo disponible retiro en tienda.</p>
+                          <Link href="/perfil" className="underline hover:no-underline mt-1 inline-block">
+                            Registrar mi dirección
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+
+                    {effectiveDelivery === "pickup" && (
+                      <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <p className="font-medium text-foreground">Dirección de retiro</p>
+                            {contactAddress && (
+                              <p className="text-muted-foreground">
+                                {contactAddress}
+                                {mapsUrl && (
+                                  <> — <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">ver en mapa</a></>
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <p className="font-medium text-foreground">Horarios de atención</p>
+                            <p className="text-muted-foreground">{weekdayHours}</p>
+                            <p className="text-muted-foreground">{saturdayHours}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <Separator />
+
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary" />
@@ -208,15 +323,15 @@ export default function CarritoPage() {
                   </div>
 
                   <Separator />
+
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Banknote className="h-4 w-4 text-primary" />
                       <span className="font-semibold text-sm">Método de Pago</span>
                     </div>
-                    
+
                     <div className="border rounded-lg overflow-hidden divide-y">
-                      {/* Efectivo */}
-                      <div 
+                      <div
                         onClick={() => setPaymentMethod("cash")}
                         className={`p-3 cursor-pointer transition-colors flex items-center justify-between ${
                           paymentMethod === "cash" ? "bg-primary/5" : "hover:bg-muted"
@@ -236,9 +351,8 @@ export default function CarritoPage() {
                         </div>
                       </div>
 
-                      {/* Transferencia */}
                       <div>
-                        <div 
+                        <div
                           onClick={() => setPaymentMethod("transfer")}
                           className={`p-3 cursor-pointer transition-colors flex items-center justify-between ${
                             paymentMethod === "transfer" ? "bg-primary/5" : "hover:bg-muted"
@@ -258,8 +372,7 @@ export default function CarritoPage() {
                           </div>
                         </div>
 
-                        {/* Contenido Acordeón Transferencia */}
-                        <div 
+                        <div
                           className={`transition-all duration-300 ease-in-out overflow-hidden ${
                             paymentMethod === "transfer" ? "max-h-[300px] border-t" : "max-h-0"
                           }`}
@@ -271,25 +384,20 @@ export default function CarritoPage() {
                               <span className="col-span-2 text-foreground font-semibold">
                                 {process.env.NEXT_PUBLIC_TRANSFER_COMPANY_NAME || "Importadora y Distribuidora CodSpace Ltda."}
                               </span>
-                              
                               <span className="font-medium">RUT:</span>
                               <span className="col-span-2 text-foreground font-semibold">
                                 {process.env.NEXT_PUBLIC_TRANSFER_COMPANY_RUT || "76.123.456-K"}
                               </span>
-                              
                               <span className="font-medium">Banco:</span>
                               <span className="col-span-2 text-foreground font-semibold">{process.env.NEXT_PUBLIC_TRANSFER_BANK_NAME || "Banco de Chile"}</span>
-                              
                               <span className="font-medium">Cuenta:</span>
                               <span className="col-span-2 text-foreground font-semibold">
                                 {process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_TYPE || "Cuenta Corriente"}
                               </span>
-                              
                               <span className="font-medium">Nº Cuenta:</span>
                               <span className="col-span-2 text-foreground font-semibold font-mono">
                                 {process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_NUMBER || "12-34567-89"}
                               </span>
-                              
                               <span className="font-medium">Email:</span>
                               <span className="col-span-2 text-foreground font-semibold break-all">
                                 {process.env.NEXT_PUBLIC_TRANSFER_EMAIL || "pagos@codspace.cl"}
@@ -305,8 +413,8 @@ export default function CarritoPage() {
                   </div>
                 </>
               )}
-              <Button className="w-full" size="lg" onClick={handleSubmitOrder} disabled={loading || (!!user && !address)}>
-                {loading ? "Enviando..." : !user ? "Iniciar Sesión para Pedir" : !address ? "Completa tu dirección" : "Enviar Pedido"}
+              <Button className="w-full" size="lg" onClick={handleSubmitOrder} disabled={loading}>
+                {loading ? "Enviando..." : !user ? "Iniciar Sesión para Pedir" : effectiveDelivery === "pickup" ? "Solicitar Pedido (Retiro en Tienda)" : "Enviar Pedido"}
               </Button>
               {!user && (
                 <p className="text-xs text-muted-foreground text-center">

@@ -8,7 +8,7 @@ function formatPrice(price: number) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { orderId, userEmail, userName, paymentMethod, total, items } = body;
+    const { orderId, userEmail, userName, paymentMethod, deliveryMethod, total, items } = body;
 
     if (!orderId || !userEmail) {
       return NextResponse.json({ error: "Faltan parámetros requeridos" }, { status: 400 });
@@ -78,6 +78,20 @@ export async function POST(request: Request) {
               <p style="margin-top: 0; font-size: 16px; color: #334155; line-height: 1.5;">Hola <strong>${userName}</strong>,</p>
               <p style="font-size: 16px; color: #334155; line-height: 1.5;">Tu pedido se ha recibido exitosamente. A continuación verás el resumen detallado y los próximos pasos para completar la entrega.</p>
 
+              <!-- Delivery Method -->
+              <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 24px 0; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #166534; font-size: 16px;">Método de Entrega</h3>
+                <p style="margin: 4px 0; font-size: 14px; color: #15803d;">
+                  ${deliveryMethod === "pickup" ? "Retiro en Tienda — Te esperamos en nuestra dirección para que retires tu pedido." : "Envío a Domicilio — Recibirás tu pedido en la dirección registrada en tu perfil."}
+                </p>
+                ${deliveryMethod === "pickup" ? `
+                  <div style="margin-top: 8px; padding: 12px; background-color: #ffffff; border-radius: 4px; font-size: 13px; color: #475569;">
+                    <p style="margin: 0 0 4px;"><strong>Dirección de retiro:</strong> ${process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Consultar con el vendedor"}</p>
+                    <p style="margin: 0;"><strong>Horarios:</strong> ${process.env.NEXT_PUBLIC_STORE_HOURS_WEEKDAY || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00"} | ${process.env.NEXT_PUBLIC_STORE_HOURS_SATURDAY || "Sábados: 9:00 a 13:00"}</p>
+                  </div>
+                ` : ""}
+              </div>
+
               <!-- Payment Instructions -->
               ${paymentInstructions}
 
@@ -141,6 +155,7 @@ export async function POST(request: Request) {
       console.log(`[SIMULACIÓN EMAIL] Pedido #${orderId.slice(0, 8)}`);
       console.log(`Enviado a: ${userName} <${userEmail}>`);
       console.log(`Método de Pago: ${paymentMethod}`);
+      console.log(`Método de Entrega: ${deliveryMethod === "pickup" ? "Retiro en Tienda" : "Envío a Domicilio"}`);
       console.log(`Monto Total: ${formatPrice(total)}`);
       console.log("====================================================================");
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
 
 interface FooterProps {
@@ -14,6 +14,8 @@ export function Footer({ siteName }: FooterProps) {
   const contactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+56 9 1234 5678";
   const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Mi dirección";
   const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com";
+  const weekdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_WEEKDAY || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
+  const saturdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_SATURDAY || "Sábados: 9:00 a 13:00";
 
   return (
     <footer className="border-t bg-muted/20 mt-auto py-12">
@@ -102,6 +104,13 @@ export function Footer({ siteName }: FooterProps) {
                   <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                   <span>{contactAddress}</span>
                 </a>
+              </li>
+              <li className="flex items-start gap-2">
+                <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <p>{weekdayHours}</p>
+                  <p>{saturdayHours}</p>
+                </div>
               </li>
             </ul>
           </div>

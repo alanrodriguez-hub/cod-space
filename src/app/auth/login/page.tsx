@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
+import { emailSchema } from "@/lib/validations";
 import { toast } from "sonner";
-import { Mail, KeyRound, Loader2, Send, ArrowLeft } from "lucide-react";
+import { Mail, KeyRound, Loader2, Send, ArrowLeft, AlertCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const MAX_ATTEMPTS = 5;
@@ -40,6 +41,8 @@ export default function LoginPage() {
 
 function LoginForm() {
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
   const [token, setToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -47,6 +50,15 @@ function LoginForm() {
   const redirect = searchParams.get("redirect") || "/";
   const router = useRouter();
   const supabase = createClient();
+
+  const validateEmail = useCallback((value: string) => {
+    const result = emailSchema.safeParse(value);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      return issue.message;
+    }
+    return null;
+  }, []);
 
   async function checkRateLimit(identifier: string, action: string): Promise<boolean> {
     const { data, error } = await supabase.rpc("check_rate_limit", {
@@ -59,8 +71,25 @@ function LoginForm() {
     return data as boolean;
   }
 
+  function handleEmailChange(value: string) {
+    setEmail(value);
+    if (emailTouched) {
+      setEmailError(validateEmail(value));
+    }
+  }
+
+  function handleEmailBlur() {
+    setEmailTouched(true);
+    setEmailError(validateEmail(email));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const error = validateEmail(email);
+    setEmailTouched(true);
+    setEmailError(error);
+    if (error) return;
 
     const allowed = await checkRateLimit(email, "otp_send");
     if (!allowed) {
@@ -70,7 +99,7 @@ function LoginForm() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error: authError } = await supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
@@ -79,7 +108,7 @@ function LoginForm() {
 
     setLoading(false);
 
-    if (error) {
+    if (authError) {
       toast.error("Error al enviar el código. Intenta nuevamente.");
       return;
     }
@@ -146,7 +175,7 @@ function LoginForm() {
         <CardContent className="space-y-4 pb-8">
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Correo Electrónico
                 </Label>
@@ -155,14 +184,23 @@ function LoginForm() {
                   type="email"
                   placeholder="ejemplo@correo.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  onBlur={handleEmailBlur}
                   required
                   className="h-10 text-base"
                   disabled={loading}
                   autoComplete="email"
+                  aria-invalid={emailTouched && !!emailError}
+                  aria-describedby={emailError ? "email-error" : undefined}
                 />
+                {emailTouched && emailError && (
+                  <p id="email-error" className="flex items-center gap-1.5 text-xs text-destructive" role="alert">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {emailError}
+                  </p>
+                )}
               </div>
-              <Button type="submit" size="lg" className="w-full cursor-pointer h-10 font-semibold" disabled={loading}>
+              <Button type="submit" size="lg" className="w-full cursor-pointer h-10 font-semibold" disabled={loading || (emailTouched && !!emailError)}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -8,6 +8,10 @@ export async function generateMetadata() {
 
 export default async function PrivacidadPage() {
   const siteName = await getSiteName();
+  const companyName = process.env.NEXT_PUBLIC_TRANSFER_COMPANY_NAME || siteName;
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "privacidad@autorepuestos.cl";
+  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS;
+  const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -22,11 +26,16 @@ export default async function PrivacidadPage() {
           <section>
             <h2 className="text-xl font-semibold mt-0">1. Responsable del Tratamiento</h2>
             <p>
-              {siteName} (en adelante, &quot;la Empresa&quot;) es responsable del tratamiento de los datos
+              {companyName} (en adelante, &quot;la Empresa&quot;) es responsable del tratamiento de los datos
               personales que los usuarios proporcionen a través de este sitio web, de acuerdo con la
               Ley N° 19.628 sobre Protección de la Vida Privada y la Ley N° 21.719 sobre Protección
               de Datos Personales de Chile.
             </p>
+            {contactAddress && (
+              <p className="text-sm text-muted-foreground">
+                {companyName}, {contactAddress}
+              </p>
+            )}
           </section>
 
           <section>
@@ -138,8 +147,15 @@ export default async function PrivacidadPage() {
               puede contactarnos a:
             </p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Correo electrónico:</strong> privacidad@autorepuestos.cl</li>
-              <li><strong>Dirección:</strong> [Dirección de la empresa]</li>
+              <li><strong>Correo electrónico:</strong> {contactEmail}</li>
+              {contactAddress && (
+                <li>
+                  <strong>Dirección:</strong> {contactAddress}
+                  {mapsUrl && (
+                    <> (<a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">ver en mapa</a>)</>
+                  )}
+                </li>
+              )}
             </ul>
           </section>
         </CardContent>

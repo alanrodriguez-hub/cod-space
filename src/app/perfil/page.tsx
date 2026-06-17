@@ -7,12 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@/contexts/user-context";
+import { regions } from "@/lib/chilean-regions";
+import { validateChileanRut, formatRut } from "@/lib/rut";
 import { toast } from "sonner";
-import { User as UserIcon, MapPin, Shield } from "lucide-react";
+import { User as UserIcon, MapPin, Shield, CheckCircle, AlertCircle, Lock } from "lucide-react";
 
 export default function PerfilPage() {
   const { user, loading: userLoading } = useUser();
@@ -30,8 +38,10 @@ export default function PerfilPage() {
     address_region: "",
     address_zip: "",
   });
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [privacyAcceptedAt, setPrivacyAcceptedAt] = useState<string | null>(null);
+
+  const [rutError, setRutError] = useState<string | null>(null);
+  const [rutTouched, setRutTouched] = useState(false);
 
   useEffect(() => {
     if (userLoading) return;
@@ -58,7 +68,6 @@ export default function PerfilPage() {
           address_zip: data.address_zip ?? "",
         });
         setPrivacyAcceptedAt(data.privacy_accepted_at);
-        setPrivacyAccepted(!!data.privacy_accepted_at);
       }
       setLoading(false);
     }
@@ -66,9 +75,31 @@ export default function PerfilPage() {
     fetchProfile();
   }, [user, userLoading, router, supabase]);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  function handleRutChange(value: string) {
+    const digits = value.replace(/[^0-9Kk]/g, "").toUpperCase();
+    setForm((prev) => ({ ...prev, rut: digits }));
+    if (rutTouched) {
+      setRutError(validateChileanRut(digits));
+    }
   }
+
+  function handleRutBlur() {
+    setRutTouched(true);
+    const error = validateChileanRut(form.rut);
+    setRutError(error);
+    if (!error && form.rut) {
+      setForm((prev) => ({ ...prev, rut: formatRut(form.rut) }));
+    }
+  }
+
+  function handleZipChange(value: string) {
+    const digits = value.replace(/\D/g, "").slice(0, 7);
+    setForm((prev) => ({ ...prev, address_zip: digits }));
+  }
+
+  const availableCities = regions.find((r) => r.name === form.address_region)?.cities ?? [];
+
+  const privacyAccepted = !!privacyAcceptedAt;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -79,10 +110,21 @@ export default function PerfilPage() {
       return;
     }
 
+    const rutErr = validateChileanRut(form.rut);
+    if (form.rut && rutErr) {
+      setRutTouched(true);
+      setRutError(rutErr);
+      toast.error("Corrige el RUT antes de guardar.");
+      return;
+    }
+
     setSaving(true);
     try {
-      const updateData: Record<string, unknown> = { ...form };
-      if (!privacyAcceptedAt && privacyAccepted) {
+      const updateData: Record<string, unknown> = {};
+      for (const [key, value] of Object.entries(form)) {
+        updateData[key] = value || null;
+      }
+      if (!privacyAcceptedAt) {
         updateData.privacy_accepted_at = new Date().toISOString();
       }
 
@@ -137,7 +179,7 @@ export default function PerfilPage() {
                 name="full_name"
                 placeholder="Juan Pérez"
                 value={form.full_name}
-                onChange={handleChange}
+                onChange={(e) => setForm((prev) => ({ ...prev, full_name: e.target.value }))}
               />
             </div>
 
@@ -149,18 +191,28 @@ export default function PerfilPage() {
                   name="phone"
                   placeholder="+56 9 1234 5678"
                   value={form.phone}
-                  onChange={handleChange}
+                  onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="rut">RUT</Label>
                 <Input
                   id="rut"
                   name="rut"
                   placeholder="12.345.678-9"
                   value={form.rut}
-                  onChange={handleChange}
+                  onChange={(e) => handleRutChange(e.target.value)}
+                  onBlur={handleRutBlur}
+                  inputMode="text"
+                  aria-invalid={rutTouched && !!rutError}
+                  aria-describedby={rutError ? "rut-error" : undefined}
                 />
+                {rutTouched && rutError && (
+                  <p id="rut-error" className="flex items-center gap-1.5 text-xs text-destructive" role="alert">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    {rutError}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -181,30 +233,52 @@ export default function PerfilPage() {
                 name="address_street"
                 placeholder="Av. Libertador 1234, Depto 56"
                 value={form.address_street}
-                onChange={handleChange}
+                onChange={(e) => setForm((prev) => ({ ...prev, address_street: e.target.value }))}
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="address_city">Ciudad</Label>
-                <Input
-                  id="address_city"
-                  name="address_city"
-                  placeholder="Santiago"
-                  value={form.address_city}
-                  onChange={handleChange}
-                />
+                <Label htmlFor="address_region">Región</Label>
+                <Select
+                  value={form.address_region}
+                  onValueChange={(val) => {
+                    const region = val ?? "";
+                    setForm((prev) => ({
+                      ...prev,
+                      address_region: region,
+                      address_city: region !== prev.address_region ? "" : prev.address_city,
+                    }));
+                  }}
+                >
+                  <SelectTrigger id="address_region" className="w-full">
+                    <SelectValue placeholder="Seleccionar región" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regions.map((r) => (
+                      <SelectItem key={r.name} value={r.name}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="address_region">Región</Label>
-                <Input
-                  id="address_region"
-                  name="address_region"
-                  placeholder="Región Metropolitana"
-                  value={form.address_region}
-                  onChange={handleChange}
-                />
+                <Label htmlFor="address_city">Ciudad</Label>
+                <Select
+                  value={form.address_city}
+                  onValueChange={(val) => {
+                    setForm((prev) => ({ ...prev, address_city: val ?? "" }));
+                  }}
+                  disabled={!form.address_region}
+                >
+                  <SelectTrigger id="address_city" className="w-full">
+                    <SelectValue placeholder={form.address_region ? "Seleccionar ciudad" : "Elige región primero"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCities.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -216,7 +290,9 @@ export default function PerfilPage() {
                   name="address_zip"
                   placeholder="8320000"
                   value={form.address_zip}
-                  onChange={handleChange}
+                  onChange={(e) => handleZipChange(e.target.value)}
+                  inputMode="numeric"
+                  maxLength={7}
                 />
               </div>
             </div>
@@ -231,30 +307,55 @@ export default function PerfilPage() {
             </div>
             <Separator />
 
-            <label className="flex items-start gap-3 cursor-pointer">
-              <Checkbox
-                checked={privacyAccepted}
-                onCheckedChange={(checked) => setPrivacyAccepted(checked ?? false)}
-                disabled={!!privacyAcceptedAt}
-              />
-              <span className="text-sm leading-relaxed">
-                He leído y acepto la{" "}
-                <Link href="/privacidad" className="text-primary underline hover:no-underline" target="_blank">
-                  Política de Privacidad y Tratamiento de Datos Personales
-                </Link>
-                .
-              </span>
-            </label>
-
-            {privacyAcceptedAt && (
-              <p className="text-xs text-muted-foreground">
-                Aceptaste la política de privacidad el{" "}
-                {new Date(privacyAcceptedAt).toLocaleDateString("es-CL", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
+            {privacyAccepted ? (
+              <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+                <Lock className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground mb-1">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    Privacidad aceptada
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Aceptaste la{" "}
+                    <Link href="/privacidad" className="text-primary underline hover:no-underline" target="_blank">
+                      Política de Privacidad
+                    </Link>{" "}
+                    el{" "}
+                    {new Date(privacyAcceptedAt).toLocaleDateString("es-CL", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                    .
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Para continuar, debes aceptar nuestra política de privacidad y tratamiento de datos personales.
+                </p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 rounded border-input accent-primary"
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setPrivacyAcceptedAt(new Date().toISOString());
+                      } else {
+                        setPrivacyAcceptedAt(null);
+                      }
+                    }}
+                  />
+                  <span className="text-sm leading-relaxed">
+                    He leído y acepto la{" "}
+                    <Link href="/privacidad" className="text-primary underline hover:no-underline" target="_blank">
+                      Política de Privacidad y Tratamiento de Datos Personales
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </div>
             )}
           </CardContent>
         </Card>
