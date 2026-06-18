@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -79,14 +79,16 @@ export function CategoryForm({ editId }: { editId: string | null }) {
   }
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">{editId ? "Editar Categoría" : "Nueva Categoría"}</h2>
+    <Card size="sm">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>{editId ? "Editar Categoría" : "Nueva Categoría"}</CardTitle>
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
+      </CardHeader>
+      <CardContent>
         <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="cat-name">Nombre</Label>

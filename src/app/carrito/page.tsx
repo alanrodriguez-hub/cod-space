@@ -23,7 +23,7 @@ export default function CarritoPage() {
   const [user, setUser] = useState<User | null>(null);
   const [address, setAddress] = useState<{ street: string; city: string; region: string; zip: string } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "transfer">("cash");
-  const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("shipping");
+  const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("pickup");
   const router = useRouter();
   const supabase = createClient();
 
@@ -267,60 +267,55 @@ export default function CarritoPage() {
                         </div>
                       </div>
                     )}
-
-                    {effectiveDelivery === "pickup" && (
-                      <div className="rounded-md border bg-muted/30 p-3 space-y-2">
-                        <div className="flex items-start gap-2">
-                          <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          <div className="text-xs">
-                            <p className="font-medium text-foreground">Dirección de retiro</p>
-                            {contactAddress && (
-                              <p className="text-muted-foreground">
-                                {contactAddress}
-                                {mapsUrl && (
-                                  <> — <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">ver en mapa</a></>
-                                )}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                          <div className="text-xs">
-                            <p className="font-medium text-foreground">Horarios de atención</p>
-                            <p className="text-muted-foreground">{weekdayHours}</p>
-                            <p className="text-muted-foreground">{saturdayHours}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
 
-                  <Separator />
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-sm">Dirección de Envío</span>
+                  {effectiveDelivery === "pickup" ? (
+                    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                          <p className="font-medium text-foreground">Dirección de retiro</p>
+                          {contactAddress && (
+                            <p className="text-muted-foreground">
+                              {contactAddress}
+                              {mapsUrl && (
+                                <> — <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline hover:no-underline">ver en mapa</a></>
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                          <p className="font-medium text-foreground">Horarios de atención</p>
+                          <p className="text-muted-foreground">{weekdayHours}</p>
+                          <p className="text-muted-foreground">{saturdayHours}</p>
+                        </div>
+                      </div>
                     </div>
-                    {address ? (
-                      <div className="text-sm text-muted-foreground space-y-0.5">
-                        <p>{address.street}</p>
-                        <p>{address.city}{address.region ? `, ${address.region}` : ""}</p>
-                        {address.zip && <p>CP: {address.zip}</p>}
-                        <Link href="/perfil" className="text-primary text-xs underline hover:no-underline">
-                          Cambiar dirección
-                        </Link>
+                  ) : (
+                    <div className="rounded-md border bg-muted/30 p-3 space-y-2">
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                        <div className="text-xs">
+                          <p className="font-medium text-foreground">Dirección de envío</p>
+                          {address ? (
+                            <>
+                              <p className="text-muted-foreground">{address.street}</p>
+                              <p className="text-muted-foreground">{address.city}{address.region ? `, ${address.region}` : ""}</p>
+                              {address.zip && <p className="text-muted-foreground">CP: {address.zip}</p>}
+                              <Link href="/perfil" className="text-primary underline hover:no-underline mt-1 inline-block">
+                                Cambiar dirección
+                              </Link>
+                            </>
+                          ) : (
+                            <p className="text-destructive">No tienes dirección registrada.</p>
+                          )}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="rounded-md border border-dashed border-destructive/50 p-3 text-sm">
-                        <p className="text-destructive font-medium">No tienes dirección de envío registrada.</p>
-                        <Link href="/perfil" className="text-primary underline hover:no-underline text-xs">
-                          Completar mi dirección
-                        </Link>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   <Separator />
 

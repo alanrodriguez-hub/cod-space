@@ -146,7 +146,8 @@ export default async function AdminPedidosPage({
                   <th className="text-left p-3 font-medium">Correo</th>
                   <th className="text-left p-3 font-medium">Items</th>
                   <th className="text-left p-3 font-medium">Total</th>
-                  <th className="text-left p-3 font-medium">Método</th>
+                  <th className="text-left p-3 font-medium">Despacho</th>
+                  <th className="text-left p-3 font-medium">Pago</th>
                   <th className="text-left p-3 font-medium">Estado</th>
                   <th className="text-left p-3 font-medium">Fecha</th>
                   <th className="text-left p-3 font-medium">Acciones</th>
@@ -163,7 +164,12 @@ export default async function AdminPedidosPage({
                       <td className="p-3">{(order.order_items as { id: string }[])?.length ?? 0}</td>
                       <td className="p-3 font-medium">{formatPrice(order.total)}</td>
                       <td className="p-3">
-                        <Badge variant="outline" className="capitalize">
+                        <Badge variant={order.delivery_method === "pickup" ? "secondary" : "outline"} className="capitalize">
+                          {order.delivery_method === "pickup" ? "Retiro" : "Domicilio"}
+                        </Badge>
+                      </td>
+                      <td className="p-3">
+                        <Badge variant="outline" className="capitalize text-xs">
                           {order.payment_method === "transfer" ? "Transferencia" : "Efectivo"}
                         </Badge>
                       </td>
@@ -183,7 +189,7 @@ export default async function AdminPedidosPage({
                 })}
                 {orders.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-6 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-6 text-center text-muted-foreground">
                       No hay pedidos
                     </td>
                   </tr>

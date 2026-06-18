@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { OrderStatusForm } from "@/components/admin/order-status-form";
+import { ArrowLeft, Store, Truck, User, CreditCard } from "lucide-react";
+import { OrderStatusInline } from "@/components/admin/order-status-inline";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", minimumFractionDigits: 0 }).format(price);
@@ -44,33 +44,41 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
+  const deliveryMethod = order.delivery_method === "pickup" ? "pickup" : "shipping";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Link href="/admin/pedidos" className={buttonVariants({ variant: "ghost", size: "sm" })}>
         <ArrowLeft className="h-4 w-4 mr-1" /> Volver a pedidos
       </Link>
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Pedido #{order.id.slice(0, 8)}</h1>
-          <p className="text-muted-foreground">{formatDate(order.created_at)}</p>
-        </div>
-        <Badge className={`text-sm ${order.status === "pending" ? "bg-yellow-500 hover:bg-yellow-600" : order.status === "confirmed" ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600"} text-white`}>
-          {order.status === "pending" ? "Pendiente" : order.status === "confirmed" ? "Confirmado" : "Completado"}
-        </Badge>
-      </div>
+      <Card size="sm">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle>Pedido #{order.id.slice(0, 8)}</CardTitle>
+              <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <OrderStatusInline orderId={order.id} currentStatus={order.status} />
+        </CardContent>
+      </Card>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-4">
         <div className="md:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="font-semibold mb-4">Items del pedido</h2>
-              <div className="space-y-3">
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle>Items del pedido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="divide-y">
                 {order.order_items?.map((item: { id: string; quantity: number; unit_price: number; product?: { name: string; brand: string } }) => (
-                  <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
+                  <div key={item.id} className="flex justify-between items-center py-2">
                     <div>
                       <p className="font-medium">{item.product?.name ?? "Producto eliminado"}</p>
-                      <p className="text-sm text-muted-foreground">{item.product?.brand} · Cantidad: {item.quantity}</p>
+                      <p className="text-xs text-muted-foreground">{item.product?.brand} · Cantidad: {item.quantity}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">{formatPrice(item.unit_price * item.quantity)}</p>
@@ -79,8 +87,8 @@ export default async function AdminOrderDetailPage({
                   </div>
                 ))}
               </div>
-              <Separator className="my-4" />
-              <div className="flex justify-between text-lg font-bold">
+              <Separator className="my-3" />
+              <div className="flex justify-between font-bold">
                 <span>Total</span>
                 <span className="text-primary">{formatPrice(order.total)}</span>
               </div>
@@ -88,38 +96,50 @@ export default async function AdminOrderDetailPage({
           </Card>
         </div>
 
-        <div className="space-y-4">
-          <Card>
-            <CardContent className="p-6 space-y-3">
-              <h2 className="font-semibold">Cliente</h2>
-              {client.full_name && <p className="text-sm font-medium">{client.full_name}</p>}
-              <p className="text-sm text-muted-foreground">{client.email}</p>
-              {client.phone && <p className="text-sm text-muted-foreground">{client.phone}</p>}
-              {client.address_street && (
-                <div className="text-sm text-muted-foreground pt-1 border-t">
-                  <p>{client.address_street}</p>
-                  <p>{client.address_city}{client.address_region ? `, ${client.address_region}` : ""}</p>
-                  {client.address_zip && <p>CP: {client.address_zip}</p>}
+        <div className="space-y-3">
+          <Card size="sm">
+            <CardContent className="pt-4">
+              <div className="flex items-start gap-2">
+                <User className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0 text-sm">
+                  {client.full_name && <p className="font-medium truncate">{client.full_name}</p>}
+                  <p className="text-muted-foreground truncate">{client.email}</p>
+                  {client.phone && <p className="text-muted-foreground">{client.phone}</p>}
+                  {deliveryMethod === "shipping" && client.address_street && (
+                    <div className="text-muted-foreground mt-1 pt-1 border-t text-xs">
+                      <p>{client.address_street}</p>
+                      <p>{client.address_city}{client.address_region ? `, ${client.address_region}` : ""}</p>
+                      {client.address_zip && <p>CP: {client.address_zip}</p>}
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6 space-y-2">
-              <h2 className="font-semibold">Método de Pago</h2>
-              <div className="pt-1 border-t">
-                <Badge variant={order.payment_method === "transfer" ? "default" : "secondary"} className="capitalize">
-                  {order.payment_method === "transfer" ? "Transferencia" : "Efectivo"}
-                </Badge>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <h2 className="font-semibold">Cambiar Estado</h2>
-              <OrderStatusForm orderId={order.id} currentStatus={order.status} />
+          <Card size="sm">
+            <CardContent className="space-y-2 pt-4">
+              <div className="flex items-center gap-2 text-sm">
+                <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="font-medium">Pago</span>
+                <Badge variant={order.payment_method === "transfer" ? "default" : "secondary"} className="ml-auto capitalize">
+                  {order.payment_method === "transfer" ? "Transferencia" : "Efectivo"}
+                </Badge>
+              </div>
+              <Separator />
+              <div className="flex items-start gap-2 text-sm">
+                {deliveryMethod === "pickup" ? (
+                  <Store className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                ) : (
+                  <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                )}
+                <div>
+                  <p className="font-medium">{deliveryMethod === "pickup" ? "Retiro en Tienda" : "Envío a Domicilio"}</p>
+                  {deliveryMethod === "pickup" && (
+                    <p className="text-xs text-muted-foreground">{process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Consultar"}</p>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

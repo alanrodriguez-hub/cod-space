@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 420" width="1920" height="420">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0f1a14"/>
+      <stop offset="35%" stop-color="#143023"/>
+      <stop offset="65%" stop-color="#1a5a3a"/>
+      <stop offset="100%" stop-color="#2d8a6e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#34d399" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1920" height="420" fill="url(#bg)"/>
+
+  <!-- Background glow -->
+  <ellipse cx="1400" cy="210" rx="300" ry="180" fill="url(#accent)"/>
+
+  <!-- Decorative lines -->
+  <line x1="0" y1="70" x2="1920" y2="70" stroke="#34d399" stroke-width="0.5" stroke-opacity="0.08"/>
+  <line x1="0" y1="350" x2="1920" y2="350" stroke="#34d399" stroke-width="0.5" stroke-opacity="0.08"/>
+
+  <!-- Shield / trust icon on right -->
+  <g transform="translate(1410, 125)" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.3">
+    <!-- Shield outline -->
+    <path d="M80,10 L150,10 L150,80 C150,120 115,140 80,155 C45,140 10,120 10,80 L10,10 Z"/>
+    <!-- Checkmark inside -->
+    <path d="M45,75 L65,95 L115,50" stroke-width="3"/>
+  </g>
+
+  <!-- Star/sparkle decorations -->
+  <g fill="#34d399" fill-opacity="0.2">
+    <!-- Star 1 -->
+    <path d="M1550,155 L1553,163 L1562,163 L1555,168 L1558,177 L1550,172 L1542,177 L1545,168 L1538,163 L1547,163 Z" />
+    <!-- Star 2 -->
+    <path d="M1620,210 L1622,215 L1628,215 L1623,218 L1625,224 L1620,221 L1615,224 L1617,218 L1612,215 L1618,215 Z" />
+    <!-- Star 3 -->
+    <path d="M1580,270 L1582,275 L1588,275 L1583,278 L1585,284 L1580,281 L1575,284 L1577,278 L1572,275 L1578,275 Z" />
+    <!-- Star 4 -->
+    <path d="M1650,170 L1652,175 L1658,175 L1653,178 L1655,184 L1650,181 L1645,184 L1647,178 L1642,175 L1648,175 Z" />
+  </g>
+
+  <!-- Small circles -->
+  <g fill="#34d399" fill-opacity="0.1">
+    <circle cx="1540" cy="180" r="3"/>
+    <circle cx="1630" cy="240" r="4"/>
+    <circle cx="1590" cy="300" r="2.5"/>
+    <circle cx="1670" cy="220" r="3"/>
+    <circle cx="1520" cy="290" r="2"/>
+  </g>
+</svg>

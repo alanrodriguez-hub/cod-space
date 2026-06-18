@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -64,9 +65,9 @@ export default async function AdminModelosPage({
 
   const { data: rawModels } = await query.limit(PAGE_SIZE + 1);
 
-  let models = rawModels ?? [];
+  const models = rawModels ?? [];
   let hasNext = false;
-  let hasPrev = Boolean(after || before);
+  const hasPrev = Boolean(after || before);
   let nextCursor: string | undefined;
   let prevCursor: string | undefined;
 
@@ -93,10 +94,10 @@ export default async function AdminModelosPage({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Modelos de Auto</h1>
-        <Link href="/admin/modelos?action=new" className={buttonVariants()}>
+        <h1 className="text-2xl font-bold">Modelos de Auto</h1>
+        <Link href="/admin/modelos?action=new" className={buttonVariants({ size: "sm" })}>
           <Plus className="h-4 w-4 mr-1" /> Nuevo Modelo
         </Link>
       </div>
@@ -105,27 +106,30 @@ export default async function AdminModelosPage({
 
       <CarModelForm />
 
-      <Card>
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle>Todos los modelos</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium">Nombre</th>
-                  <th className="text-left p-3 font-medium">Marca</th>
-                  <th className="text-left p-3 font-medium">Productos</th>
-                  <th className="text-left p-3 font-medium">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {models.map((model) => (
-                  <tr key={model.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3 font-medium">{model.name}</td>
-                    <td className="p-3">
-                      <Badge variant="secondary">{(model.brand as { name: string } | null)?.name ?? "—"}</Badge>
-                    </td>
-                    <td className="p-3">{(model.product_car_models as { product_id: string }[])?.length ?? 0}</td>
-                    <td className="p-3 flex gap-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Marca</TableHead>
+                <TableHead>Productos</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {models.map((model) => (
+                <TableRow key={model.id}>
+                  <TableCell className="font-medium">{model.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{(model.brand as { name: string } | null)?.name ?? "—"}</Badge>
+                  </TableCell>
+                  <TableCell>{(model.product_car_models as { product_id: string }[])?.length ?? 0}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
                       <Link
                         href={`/admin/modelos?action=edit&id=${model.id}`}
                         className={buttonVariants({ variant: "ghost", size: "sm" })}
@@ -133,19 +137,19 @@ export default async function AdminModelosPage({
                         Editar
                       </Link>
                       <DeleteCarModelButton modelId={model.id} modelName={model.name} />
-                    </td>
-                  </tr>
-                ))}
-                {models.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="p-6 text-center text-muted-foreground">
-                      No hay modelos
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {models.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
+                    No hay modelos
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

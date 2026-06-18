@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -76,14 +76,16 @@ export function CarModelForm({ editId }: { editId: string | null }) {
   }
 
   return (
-    <Card className="mb-6">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">{editId ? "Editar Modelo" : "Nuevo Modelo"}</h2>
+    <Card size="sm">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>{editId ? "Editar Modelo" : "Nuevo Modelo"}</CardTitle>
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-4 w-4" />
           </Button>
         </div>
+      </CardHeader>
+      <CardContent>
         <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="model-name">Nombre</Label>

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -14,35 +15,38 @@ export default async function AdminCategoriasPage() {
     .order("name");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Categorías</h1>
-        <Link href="/admin/categorias?action=new" className={buttonVariants()}>
+        <h1 className="text-2xl font-bold">Categorías</h1>
+        <Link href="/admin/categorias?action=new" className={buttonVariants({ size: "sm" })}>
           <Plus className="h-4 w-4 mr-1" /> Nueva Categoría
         </Link>
       </div>
 
       <CategoryForm />
 
-      <Card>
+      <Card size="sm">
+        <CardHeader>
+          <CardTitle>Todas las categorías</CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left p-3 font-medium">Nombre</th>
-                  <th className="text-left p-3 font-medium">Slug</th>
-                  <th className="text-left p-3 font-medium">Productos</th>
-                  <th className="text-left p-3 font-medium">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categories?.map((cat) => (
-                  <tr key={cat.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="p-3 font-medium">{cat.name}</td>
-                    <td className="p-3 text-muted-foreground font-mono text-xs">{cat.slug}</td>
-                    <td className="p-3">{(cat.products as { id: string }[])?.length ?? 0}</td>
-                    <td className="p-3 flex gap-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Slug</TableHead>
+                <TableHead>Productos</TableHead>
+                <TableHead>Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {categories?.map((cat) => (
+                <TableRow key={cat.id}>
+                  <TableCell className="font-medium">{cat.name}</TableCell>
+                  <TableCell className="text-muted-foreground font-mono text-xs">{cat.slug}</TableCell>
+                  <TableCell>{(cat.products as { id: string }[])?.length ?? 0}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
                       <Link
                         href={`/admin/categorias?action=edit&id=${cat.id}`}
                         className={buttonVariants({ variant: "ghost", size: "sm" })}
@@ -50,19 +54,19 @@ export default async function AdminCategoriasPage() {
                         Editar
                       </Link>
                       <DeleteCategoryButton categoryId={cat.id} categoryName={cat.name} />
-                    </td>
-                  </tr>
-                ))}
-                {(!categories || categories.length === 0) && (
-                  <tr>
-                    <td colSpan={4} className="p-6 text-center text-muted-foreground">
-                      No hay categorías
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {(!categories || categories.length === 0) && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
+                    No hay categorías
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
