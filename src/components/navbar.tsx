@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function Navbar({ siteName }: { siteName: string }) {
+export function Navbar({ siteName, mapsUrl }: { siteName: string; mapsUrl: string }) {
   const { totalItems } = useCart();
   const { user, isAdmin } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,7 +54,7 @@ export function Navbar({ siteName }: { siteName: string }) {
             Catálogo
           </Link>
           <a
-            href={process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com"}
+            href={mapsUrl || "https://maps.google.com"}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/5 hover:bg-primary/10 border border-primary/10 text-primary transition-all text-xs font-semibold group"
@@ -144,7 +144,7 @@ export function Navbar({ siteName }: { siteName: string }) {
             Catálogo
           </Link>
           <a
-            href={process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com"}
+            href={mapsUrl || "https://maps.google.com"}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/10 text-primary transition-colors text-sm font-semibold w-full"

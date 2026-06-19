@@ -1,17 +1,17 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { getSiteName } from "@/lib/data-cache";
+import { getSettings } from "@/lib/data-cache";
 
 export async function generateMetadata() {
-  const siteName = await getSiteName();
-  return { title: `${siteName} - Política de Privacidad` };
+  const settings = await getSettings();
+  return { title: `${settings.site_name} - Política de Privacidad` };
 }
 
 export default async function PrivacidadPage() {
-  const siteName = await getSiteName();
-  const companyName = process.env.NEXT_PUBLIC_TRANSFER_COMPANY_NAME || siteName;
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "privacidad@autorepuestos.cl";
-  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS;
-  const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL;
+  const settings = await getSettings();
+  const companyName = settings.transfer_company_name || settings.site_name;
+  const contactEmail = settings.contact_email || "privacidad@autorepuestos.cl";
+  const contactAddress = settings.contact_address;
+  const mapsUrl = settings.maps_url;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">

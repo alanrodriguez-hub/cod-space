@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { createClient } from "@/lib/supabase/server";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", minimumFractionDigits: 0 }).format(price);
+}
+
+async function getSettingsMap() {
+  const supabase = await createClient();
+  const { data } = await supabase.from("site_settings").select("key, value");
+  const map: Record<string, string> = {};
+  for (const row of data ?? []) {
+    map[row.key] = row.value;
+  }
+  return map;
 }
 
 export async function POST(request: Request) {
@@ -14,11 +25,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Faltan parámetros requeridos" }, { status: 400 });
     }
 
-    const smtpHost = process.env.SMTP_HOST;
-    const smtpPort = process.env.SMTP_PORT;
-    const smtpUser = process.env.SMTP_USER;
-    const smtpPass = process.env.SMTP_PASSWORD;
-    const smtpFrom = process.env.SMTP_FROM || "no-reply@codspace.cl";
+    const s = await getSettingsMap();
+
+    const smtpHost = s.smtp_host;
+    const smtpPort = s.smtp_port;
+    const smtpUser = s.smtp_user;
+    const smtpPass = s.smtp_password;
+    const smtpFrom = s.smtp_from || "no-reply@codspace.cl";
+    const transferCompanyName = s.transfer_company_name || "Importadora y Distribuidora CodSpace Ltda.";
+    const transferCompanyRut = s.transfer_company_rut || "76.123.456-K";
+    const transferAccountType = s.transfer_account_type || "Cuenta Corriente";
+    const transferAccountNumber = s.transfer_account_number || "12-34567-89";
+    const transferEmail = s.transfer_email || "pagos@codspace.cl";
+    const contactAddress = s.contact_address || "Consultar con el vendedor";
+    const storeHoursWeekday = s.store_hours_weekday || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
+    const storeHoursSaturday = s.store_hours_saturday || "Sábados: 9:00 a 13:00";
 
     // Generar el desglose de productos en HTML
     const itemsHtml = items.map((item: { name: string; brand?: string; quantity: number; price: number }) => `
@@ -39,11 +60,11 @@ export async function POST(request: Request) {
       paymentInstructions = `
         <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 16px; margin: 24px 0; border-radius: 4px;">
           <h3 style="margin-top: 0; color: #1e293b; font-size: 16px;">Instrucciones para Transferencia Bancaria:</h3>
-          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Nombre Empresa:</strong> ${process.env.NEXT_PUBLIC_TRANSFER_COMPANY_NAME || "Importadora y Distribuidora CodSpace Ltda."}</p>
-          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>RUT Empresa:</strong> ${process.env.NEXT_PUBLIC_TRANSFER_COMPANY_RUT || "76.123.456-K"}</p>
-          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Tipo de Cuenta:</strong> ${process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_TYPE || "Cuenta Corriente"}</p>
-          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Número de Cuenta:</strong> ${process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_NUMBER || "12-34567-89"}</p>
-          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Email de Envío:</strong> ${process.env.NEXT_PUBLIC_TRANSFER_EMAIL || "pagos@codspace.cl"}</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Nombre Empresa:</strong> ${transferCompanyName}</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>RUT Empresa:</strong> ${transferCompanyRut}</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Tipo de Cuenta:</strong> ${transferAccountType}</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Número de Cuenta:</strong> ${transferAccountNumber}</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #475569;"><strong>Email de Envío:</strong> ${transferEmail}</p>
           <p style="margin-top: 12px; margin-bottom: 0; font-size: 12px; color: #64748b; font-style: italic;">
             * Por favor, envía el comprobante de transferencia a nuestro correo indicando tu ID de pedido <strong>#${orderId.slice(0, 8)}</strong> en el asunto.
           </p>
@@ -86,8 +107,8 @@ export async function POST(request: Request) {
                 </p>
                 ${deliveryMethod === "pickup" ? `
                   <div style="margin-top: 8px; padding: 12px; background-color: #ffffff; border-radius: 4px; font-size: 13px; color: #475569;">
-                    <p style="margin: 0 0 4px;"><strong>Dirección de retiro:</strong> ${process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Consultar con el vendedor"}</p>
-                    <p style="margin: 0;"><strong>Horarios:</strong> ${process.env.NEXT_PUBLIC_STORE_HOURS_WEEKDAY || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00"} | ${process.env.NEXT_PUBLIC_STORE_HOURS_SATURDAY || "Sábados: 9:00 a 13:00"}</p>
+                    <p style="margin: 0 0 4px;"><strong>Dirección de retiro:</strong> ${contactAddress}</p>
+                    <p style="margin: 0;"><strong>Horarios:</strong> ${storeHoursWeekday} | ${storeHoursSaturday}</p>
                   </div>
                 ` : ""}
               </div>

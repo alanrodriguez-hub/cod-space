@@ -4,18 +4,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { SocialLinks } from "@/components/social-links";
+import type { SiteSettings } from "@/lib/types";
 
 interface FooterProps {
   siteName: string;
+  settings: SiteSettings;
 }
 
-export function Footer({ siteName }: FooterProps) {
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || "contacto@midiminio.cl";
-  const contactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE || "+56 9 1234 5678";
-  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Mi dirección";
-  const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL || "https://maps.google.com";
-  const weekdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_WEEKDAY || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
-  const saturdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_SATURDAY || "Sábados: 9:00 a 13:00";
+export function Footer({ siteName, settings }: FooterProps) {
+  const contactEmail = settings.contact_email || "contacto@midiminio.cl";
+  const contactPhone = settings.contact_phone || "+56 9 1234 5678";
+  const contactAddress = settings.contact_address || "Mi dirección";
+  const mapsUrl = settings.maps_url || "https://maps.google.com";
+  const weekdayHours = settings.store_hours_weekday || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
+  const saturdayHours = settings.store_hours_saturday || "Sábados: 9:00 a 13:00";
 
   return (
     <footer className="border-t bg-muted/20 mt-auto py-12">
@@ -41,7 +43,7 @@ export function Footer({ siteName }: FooterProps) {
                 Síguenos
               </h4>
               <div className="flex justify-start">
-                <SocialLinks />
+                <SocialLinks settings={settings} />
               </div>
             </div>
           </div>

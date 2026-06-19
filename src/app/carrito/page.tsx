@@ -7,6 +7,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/contexts/cart-context";
+import { useSettings } from "@/contexts/settings-context";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -26,11 +27,12 @@ export default function CarritoPage() {
   const [deliveryMethod, setDeliveryMethod] = useState<"shipping" | "pickup">("pickup");
   const router = useRouter();
   const supabase = createClient();
+  const settings = useSettings();
 
-  const contactAddress = process.env.NEXT_PUBLIC_CONTACT_ADDRESS;
-  const mapsUrl = process.env.NEXT_PUBLIC_MAPS_URL;
-  const weekdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_WEEKDAY || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
-  const saturdayHours = process.env.NEXT_PUBLIC_STORE_HOURS_SATURDAY || "Sábados: 9:00 a 13:00";
+  const contactAddress = settings.contact_address;
+  const mapsUrl = settings.maps_url;
+  const weekdayHours = settings.store_hours_weekday || "Lunes a Viernes: 9:00 a 13:00 y 15:00 a 17:00";
+  const saturdayHours = settings.store_hours_saturday || "Sábados: 9:00 a 13:00";
 
   const hasAddress = !!(address?.street && address?.city);
   const effectiveDelivery: "shipping" | "pickup" = deliveryMethod === "shipping" && !hasAddress ? "pickup" : deliveryMethod;
@@ -377,25 +379,25 @@ export default function CarritoPage() {
                             <div className="grid grid-cols-3 gap-y-1 text-muted-foreground">
                               <span className="font-medium">Nombre:</span>
                               <span className="col-span-2 text-foreground font-semibold">
-                                {process.env.NEXT_PUBLIC_TRANSFER_COMPANY_NAME || "Importadora y Distribuidora CodSpace Ltda."}
+                                {settings.transfer_company_name || "Importadora y Distribuidora CodSpace Ltda."}
                               </span>
                               <span className="font-medium">RUT:</span>
                               <span className="col-span-2 text-foreground font-semibold">
-                                {process.env.NEXT_PUBLIC_TRANSFER_COMPANY_RUT || "76.123.456-K"}
+                                {settings.transfer_company_rut || "76.123.456-K"}
                               </span>
                               <span className="font-medium">Banco:</span>
-                              <span className="col-span-2 text-foreground font-semibold">{process.env.NEXT_PUBLIC_TRANSFER_BANK_NAME || "Banco de Chile"}</span>
+                              <span className="col-span-2 text-foreground font-semibold">{settings.transfer_bank_name || "Banco de Chile"}</span>
                               <span className="font-medium">Cuenta:</span>
                               <span className="col-span-2 text-foreground font-semibold">
-                                {process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_TYPE || "Cuenta Corriente"}
+                                {settings.transfer_account_type || "Cuenta Corriente"}
                               </span>
                               <span className="font-medium">Nº Cuenta:</span>
                               <span className="col-span-2 text-foreground font-semibold font-mono">
-                                {process.env.NEXT_PUBLIC_TRANSFER_ACCOUNT_NUMBER || "12-34567-89"}
+                                {settings.transfer_account_number || "12-34567-89"}
                               </span>
                               <span className="font-medium">Email:</span>
                               <span className="col-span-2 text-foreground font-semibold break-all">
-                                {process.env.NEXT_PUBLIC_TRANSFER_EMAIL || "pagos@codspace.cl"}
+                                {settings.transfer_email || "pagos@codspace.cl"}
                               </span>
                             </div>
                             <p className="text-[10px] text-muted-foreground mt-1.5 italic leading-snug">

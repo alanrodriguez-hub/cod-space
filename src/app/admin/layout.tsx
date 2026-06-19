@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ShoppingBag, Users, Package, FolderTree, ImageUp, Tag, Car, Upload, ImageIcon } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Users, Package, FolderTree, ImageUp, Tag, Car, Upload, ImageIcon, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrderNotifier } from "@/components/admin/order-notifier";
 import type { ReactNode } from "react";
@@ -36,6 +36,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/productos/carga-masiva", label: "Carga Masiva", icon: Upload },
       { href: "/admin/productos/imagenes", label: "Imágenes", icon: ImageUp },
       { href: "/admin/banners", label: "Banners", icon: ImageIcon },
+      { href: "/admin/settings", label: "Configuración", icon: Settings },
     ],
   },
 ];
