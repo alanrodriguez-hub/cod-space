@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { SiteSettings } from "@/lib/types";
 
 function FacebookIcon({ className }: { className?: string }) {
   return (
@@ -32,14 +33,17 @@ function WhatsappIcon({ className }: { className?: string }) {
   );
 }
 
-const socialLinks = [
-  { key: "facebook", url: process.env.NEXT_PUBLIC_FACEBOOK_URL, icon: FacebookIcon, label: "Facebook" },
-  { key: "instagram", url: process.env.NEXT_PUBLIC_INSTAGRAM_URL, icon: InstagramIcon, label: "Instagram" },
-  { key: "tiktok", url: process.env.NEXT_PUBLIC_TIKTOK_URL, icon: TiktokIcon, label: "TikTok" },
-  { key: "whatsapp", url: process.env.NEXT_PUBLIC_WHATSAPP_URL, icon: WhatsappIcon, label: "WhatsApp" },
-];
+function getSocialLinks(settings: SiteSettings) {
+  return [
+    { key: "facebook", url: settings.facebook_url, icon: FacebookIcon, label: "Facebook" },
+    { key: "instagram", url: settings.instagram_url, icon: InstagramIcon, label: "Instagram" },
+    { key: "tiktok", url: settings.tiktok_url, icon: TiktokIcon, label: "TikTok" },
+    { key: "whatsapp", url: settings.whatsapp_url, icon: WhatsappIcon, label: "WhatsApp" },
+  ];
+}
 
-export function SocialLinks() {
+export function SocialLinks({ settings }: { settings: SiteSettings }) {
+  const socialLinks = getSocialLinks(settings);
   const active = socialLinks.filter((s) => s.url);
 
   if (active.length === 0) return null;

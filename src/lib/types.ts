@@ -82,6 +82,32 @@ export interface SiteSetting {
   updated_at: string;
 }
 
+export interface SiteSettings {
+  site_name: string;
+  site_url: string;
+  contact_email: string;
+  contact_phone: string;
+  contact_address: string;
+  maps_url: string;
+  store_hours_weekday: string;
+  store_hours_saturday: string;
+  facebook_url: string;
+  instagram_url: string;
+  tiktok_url: string;
+  whatsapp_url: string;
+  transfer_company_name: string;
+  transfer_company_rut: string;
+  transfer_bank_name: string;
+  transfer_account_type: string;
+  transfer_account_number: string;
+  transfer_email: string;
+  smtp_host: string;
+  smtp_port: string;
+  smtp_user: string;
+  smtp_password: string;
+  smtp_from: string;
+}
+
 export interface Banner {
   id: string;
   title: string;

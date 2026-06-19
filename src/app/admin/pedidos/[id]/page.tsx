@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/data-cache";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +46,7 @@ export default async function AdminOrderDetailPage({
   if (!order) notFound();
 
   const deliveryMethod = order.delivery_method === "pickup" ? "pickup" : "shipping";
+  const settings = await getSettings();
 
   return (
     <div className="space-y-4">
@@ -136,7 +138,7 @@ export default async function AdminOrderDetailPage({
                 <div>
                   <p className="font-medium">{deliveryMethod === "pickup" ? "Retiro en Tienda" : "Envío a Domicilio"}</p>
                   {deliveryMethod === "pickup" && (
-                    <p className="text-xs text-muted-foreground">{process.env.NEXT_PUBLIC_CONTACT_ADDRESS || "Consultar"}</p>
+                    <p className="text-xs text-muted-foreground">{settings.contact_address || "Consultar"}</p>
                   )}
                 </div>
               </div>
