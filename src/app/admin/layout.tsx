@@ -38,6 +38,7 @@ const navGroups: NavGroup[] = [
       { href: "/admin/productos/imagenes", label: "Imágenes", icon: ImageUp },
       { href: "/admin/banners", label: "Banners", icon: ImageIcon },
       { href: "/admin/settings", label: "Configuración", icon: Settings },
+      { href: "/admin/settings", label: "Configuración", icon: Settings },
     ],
   },
 ];
