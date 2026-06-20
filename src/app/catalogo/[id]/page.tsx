@@ -1,7 +1,42 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getSettings } from "@/lib/data-cache";
 
 export const revalidate = 300;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("name, description, image_url")
+    .eq("id", id)
+    .single();
+
+  if (!product) return {};
+
+  const settings = await getSettings();
+  const title = `${product.name} - ${settings.site_name}`;
+  const description = product.description?.slice(0, 160) || `Compra ${product.name} al mejor precio en ${settings.site_name}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: product.image_url
+        ? [{ url: product.image_url, width: 1200, height: 1200 }]
+        : undefined,
+    },
+  };
+}
+
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
