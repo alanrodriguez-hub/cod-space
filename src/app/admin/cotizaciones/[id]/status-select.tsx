@@ -38,26 +38,30 @@ export function StatusSelect({
   const [status, setStatus] = useState(currentStatus);
   const [loading, setLoading] = useState(false);
 
-  async function handleChange(value: string) {
+  function handleChange(value: string | null) {
+    if (!value) return;
     const newStatus = value as QuoteStatus;
     setLoading(true);
 
-    const res = await fetch(`/api/quotes/${quoteId}/status`, {
+    fetch(`/api/quotes/${quoteId}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
-    });
-
-    setLoading(false);
-
-    if (!res.ok) {
-      toast.error("Error al actualizar estado");
-      return;
-    }
-
-    setStatus(newStatus);
-    toast.success(`Estado cambiado a "${statusLabels[newStatus]}"`);
-    router.refresh();
+    })
+      .then((res) => {
+        setLoading(false);
+        if (!res.ok) {
+          toast.error("Error al actualizar estado");
+          return;
+        }
+        setStatus(newStatus);
+        toast.success(`Estado cambiado a "${statusLabels[newStatus]}"`);
+        router.refresh();
+      })
+      .catch(() => {
+        setLoading(false);
+        toast.error("Error al actualizar estado");
+      });
   }
 
   return (
