@@ -42,8 +42,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { ArrowLeft, FileText } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export default async function ProductDetailPage({
   params,
@@ -118,7 +118,18 @@ export default async function ProductDetailPage({
             </span>
           </div>
 
-          <AddToCartButton product={product} />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <AddToCartButton product={product} />
+            </div>
+            <Link
+              href="/cotizar"
+              className={buttonVariants({ variant: "outline", size: "default" }) + " gap-2"}
+            >
+              <FileText className="h-4 w-4" />
+              Cotizar
+            </Link>
+          </div>
         </div>
       </div>
     </div>

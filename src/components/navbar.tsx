@@ -53,6 +53,9 @@ export function Navbar({ siteName, mapsUrl }: { siteName: string; mapsUrl: strin
           <Link href="/catalogo" className="text-sm font-medium hover:text-primary transition-colors">
             Catálogo
           </Link>
+          <Link href="/cotizar" className="text-sm font-medium hover:text-primary transition-colors">
+            Cotizar
+          </Link>
           <a
             href={mapsUrl || "https://maps.google.com"}
             target="_blank"
@@ -142,6 +145,9 @@ export function Navbar({ siteName, mapsUrl }: { siteName: string; mapsUrl: strin
         <div className="md:hidden border-t p-4 space-y-3 bg-background">
           <Link href="/catalogo" className="block text-sm font-medium py-2" onClick={() => setMenuOpen(false)}>
             Catálogo
+          </Link>
+          <Link href="/cotizar" className="block text-sm font-medium py-2" onClick={() => setMenuOpen(false)}>
+            Cotizar
           </Link>
           <a
             href={mapsUrl || "https://maps.google.com"}

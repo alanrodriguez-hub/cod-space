@@ -119,6 +119,38 @@ export interface Banner {
   created_at: string;
 }
 
+export type QuoteStatus = "pending" | "contacted" | "completed" | "cancelled";
+
+export interface QuoteItem {
+  type: "product" | "custom";
+  product_id?: string;
+  product_name: string;
+  quantity: number;
+}
+
+export interface Quote {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  user_id: string | null;
+  items: QuoteItem[];
+  message: string;
+  status: QuoteStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuoteResponseItem {
+  id: string;
+  quote_id: string;
+  product_id: string | null;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  created_at: string;
+}
+
 export interface OrderItem {
   id: string;
   order_id: string;
