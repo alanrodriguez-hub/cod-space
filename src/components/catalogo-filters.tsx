@@ -117,7 +117,7 @@ export function CatalogoFilters({ categories, brands, currentCategory, currentBr
       >
         <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground/80" />
         <Input
-          placeholder="Buscar por modelo (ej: Corolla)..."
+          placeholder="Buscar por modelo (ej: Changan)..."
           value={model}
           onChange={(e) => setModel(e.target.value)}
           className="pl-9 pr-8 bg-muted/40 border-none shadow-none rounded-full text-xs h-9 focus-visible:bg-background transition-all duration-300"

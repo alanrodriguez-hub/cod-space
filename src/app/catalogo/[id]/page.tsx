@@ -1,14 +1,49 @@
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getSettings } from "@/lib/data-cache";
 
 export const revalidate = 300;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("name, description, image_url")
+    .eq("id", id)
+    .single();
+
+  if (!product) return {};
+
+  const settings = await getSettings();
+  const title = `${product.name} - ${settings.site_name}`;
+  const description = product.description?.slice(0, 160) || `Compra ${product.name} al mejor precio en ${settings.site_name}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: product.image_url
+        ? [{ url: product.image_url, width: 1200, height: 1200 }]
+        : undefined,
+    },
+  };
+}
+
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { ArrowLeft, FileText } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 export default async function ProductDetailPage({
   params,
@@ -83,7 +118,18 @@ export default async function ProductDetailPage({
             </span>
           </div>
 
-          <AddToCartButton product={product} />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <AddToCartButton product={product} />
+            </div>
+            <Link
+              href="/cotizar"
+              className={buttonVariants({ variant: "outline", size: "default" }) + " gap-2"}
+            >
+              <FileText className="h-4 w-4" />
+              Cotizar
+            </Link>
+          </div>
         </div>
       </div>
     </div>

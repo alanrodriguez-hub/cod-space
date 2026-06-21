@@ -79,6 +79,77 @@ create index if not exists idx_products_brand on public.products(brand);
 create index if not exists idx_orders_user on public.orders(user_id);
 create index if not exists idx_order_items_order on public.order_items(order_id);
 
+-- Quotes
+create table if not exists public.quotes (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text not null,
+  phone text,
+  user_id uuid references auth.users(id) on delete set null,
+  items jsonb not null default '[]'::jsonb,
+  message text not null,
+  status text not null default 'pending' check (status in ('pending', 'contacted', 'completed', 'cancelled')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Migrate from old schema (product_id, product_name, quantity) to new items JSONB
+alter table public.quotes add column if not exists items jsonb not null default '[]'::jsonb;
+
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'quotes' and column_name = 'product_name'
+  ) then
+    update public.quotes
+    set items = jsonb_build_array(
+      jsonb_build_object(
+        'type', case when product_id is not null then 'product' else 'custom' end,
+        'product_id', product_id,
+        'product_name', coalesce(product_name, ''),
+        'quantity', quantity
+      )
+    )
+    where items = '[]'::jsonb and (product_name is not null or product_id is not null);
+  end if;
+end $$;
+
+alter table public.quotes drop column if exists product_id;
+alter table public.quotes drop column if exists product_name;
+alter table public.quotes drop column if exists quantity;
+
+alter table public.quotes enable row level security;
+
+drop policy if exists "Anyone can insert quotes" on public.quotes;
+create policy "Anyone can insert quotes" on public.quotes for insert with check (true);
+
+drop policy if exists "Admins can read all quotes" on public.quotes;
+create policy "Admins can read all quotes" on public.quotes for select using (is_admin());
+
+drop policy if exists "Admins can update quotes" on public.quotes;
+create policy "Admins can update quotes" on public.quotes for update using (is_admin());
+
+drop policy if exists "Users can read their own quotes" on public.quotes;
+create policy "Users can read their own quotes" on public.quotes for select using (auth.uid() = user_id);
+
+-- Quote response items (admin add products with prices)
+create table if not exists public.quote_items (
+  id uuid primary key default gen_random_uuid(),
+  quote_id uuid references public.quotes(id) on delete cascade not null,
+  product_id uuid references public.products(id) on delete set null,
+  product_name text not null,
+  quantity integer not null default 1,
+  unit_price numeric(10,2) not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.quote_items enable row level security;
+
+drop policy if exists "Admins manage quote items" on public.quote_items;
+create policy "Admins manage quote items" on public.quote_items
+  for all using (is_admin());
+
 -- RPC: Crear orden transaccional (stock, items, delivery_method)
 create or replace function create_order(
   p_user_id uuid,
