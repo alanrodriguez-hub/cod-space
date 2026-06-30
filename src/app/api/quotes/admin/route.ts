@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -41,7 +40,7 @@ export async function POST(request: Request) {
         email,
         phone: phone || null,
         user_id: null,
-        items: items.map((i: { product_name: string; quantity: number }) => ({
+        items: items.map((i: { product_id?: string; product_name: string; quantity: number }) => ({
           type: i.product_id ? "product" : "custom",
           product_id: i.product_id || null,
           product_name: i.product_name,

@@ -1,21 +1,26 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-async function handler(
+interface HandlerCtx {
+  supabase: SupabaseClient;
+  id: string;
+}
+
+async function getCtx(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
-) {
+): Promise<HandlerCtx | NextResponse> {
   const auth = await requireAdmin();
   if (!auth.authorized) {
-    return { error: auth.error, status: auth.status };
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
   const rl = await checkRateLimit(request, "admin_quote_actions", 60, 15);
   if (!rl.allowed) {
-    return { error: "Demasiadas solicitudes. Intenta más tarde.", status: 429 };
+    return NextResponse.json({ error: "Demasiadas solicitudes. Intenta más tarde." }, { status: 429 });
   }
-  return { supabase: auth.supabase, id: (await params).id };
+  return { supabase: auth.supabase!, id: (await params).id };
 }
 
 export async function POST(
@@ -23,10 +28,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ctx = await handler(request, { params });
-    if ("error" in ctx) {
-      return NextResponse.json({ error: ctx.error }, { status: ctx.status });
-    }
+    const ctx = await getCtx(request, { params });
+    if (ctx instanceof NextResponse) return ctx;
 
     const body = await request.json();
     const { product_id, product_name, quantity, unit_price } = body;
@@ -64,10 +67,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ctx = await handler(request, { params });
-    if ("error" in ctx) {
-      return NextResponse.json({ error: ctx.error }, { status: ctx.status });
-    }
+    const ctx = await getCtx(request, { params });
+    if (ctx instanceof NextResponse) return ctx;
 
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get("itemId");

@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
-export async function requireAdmin() {
+type RequireAdminSuccess = { authorized: true; supabase: SupabaseClient; user: User };
+type RequireAdminError = { authorized: false; error: string; status: 401 | 403 };
+
+export async function requireAdmin(): Promise<RequireAdminSuccess | RequireAdminError> {
   const supabase = await createClient();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
