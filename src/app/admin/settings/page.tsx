@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, ShieldAlert } from "lucide-react";
 
 interface SettingRow {
   key: string;
@@ -60,6 +60,7 @@ const fieldGroups = [
   },
   {
     label: "Configuración SMTP",
+    envOverride: true,
     fields: [
       { key: "smtp_host", label: "SMTP Host", type: "text" },
       { key: "smtp_port", label: "SMTP Puerto", type: "text" },
@@ -137,7 +138,15 @@ export default function AdminSettingsPage() {
         {fieldGroups.map((group) => (
           <Card key={group.label}>
             <CardHeader>
-              <CardTitle>{group.label}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                {group.label}
+                {group.envOverride && (
+                  <span className="inline-flex items-center gap-1 text-xs font-normal text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">
+                    <ShieldAlert className="h-3 w-3" />
+                    Usa variables de entorno
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               {group.fields.map((field) => (

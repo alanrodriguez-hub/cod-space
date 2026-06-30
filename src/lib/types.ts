@@ -29,6 +29,8 @@ export interface Product {
   car_model: string;
   stock: number;
   featured: boolean;
+  sku: number | null;
+  item_code: string | null;
   created_at: string;
   category?: Category;
   product_brands?: { brand: Brand }[];
@@ -46,6 +48,7 @@ export interface Order {
   status: "pending" | "confirmed" | "completed" | "cancelled";
   total: number;
   payment_method: "cash" | "transfer";
+  delivery_method: "shipping" | "pickup";
   created_at: string;
   order_items?: OrderItem[];
 }
