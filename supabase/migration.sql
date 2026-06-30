@@ -17,6 +17,17 @@ create table if not exists public.products (
   brand text not null default '',
   car_model text not null default '',
   stock integer not null default 0,
+  featured boolean not null default false,
+  sku integer,
+  item_code text,
+  search_vector tsvector generated always as (
+    to_tsvector('spanish',
+      coalesce(name, '') || ' ' ||
+      coalesce(description, '') || ' ' ||
+      coalesce(brand, '') || ' ' ||
+      coalesce(car_model, '')
+    )
+  ) stored,
   created_at timestamptz default now()
 );
 
@@ -43,6 +54,18 @@ create table if not exists public.order_items (
 -- RLS
 alter table public.categories enable row level security;
 alter table public.products enable row level security;
+
+-- Products: Full-text search indexes
+create extension if not exists pg_trgm;
+create unique index if not exists idx_products_sku_unique on public.products(sku) where sku is not null;
+create index if not exists idx_products_search_vector on public.products using gin(search_vector);
+create index if not exists idx_products_name_trgm on public.products using gin (name gin_trgm_ops);
+create index if not exists idx_products_description_trgm on public.products using gin (description gin_trgm_ops);
+create index if not exists idx_products_brand_trgm on public.products using gin (brand gin_trgm_ops);
+create index if not exists idx_products_car_model_trgm on public.products using gin (car_model gin_trgm_ops);
+create index if not exists idx_products_item_code on public.products(item_code);
+create index if not exists idx_products_category_brand on public.products(category_id, brand);
+create index if not exists idx_products_brand_model on public.products(brand, car_model);
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 

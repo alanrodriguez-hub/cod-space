@@ -112,6 +112,13 @@ export default async function ProductDetailPage({
             <p className="text-muted-foreground">{product.description}</p>
           </div>
 
+          {product.sku && (
+            <p className="text-xs font-mono text-muted-foreground/60">SKU: {product.sku}</p>
+          )}
+          {product.item_code && (
+            <p className="text-xs font-mono text-muted-foreground/60">Código interno: {product.item_code}</p>
+          )}
+
           <div className="flex items-center gap-4">
             <span className={`text-sm ${product.stock > 0 ? "text-green-600" : "text-destructive"}`}>
               {product.stock > 0 ? `${product.stock} en stock` : "Sin stock"}

@@ -27,6 +27,7 @@ export function CatalogoFilters({ categories, brands, currentCategory, currentBr
   const router = useRouter();
   const searchParams = useSearchParams();
   const [model, setModel] = useState(currentModel || "");
+  const [query, setQuery] = useState(currentQuery || "");
 
   function updateFilter(key: string, value: string | undefined) {
     const params = new URLSearchParams(searchParams.toString());
@@ -107,6 +108,35 @@ export function CatalogoFilters({ categories, brands, currentCategory, currentBr
         )}
       </div>
 
+      {/* Búsqueda por texto (nombre, descripción, marca, modelo) */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          updateFilter("q", query || undefined);
+        }}
+        className="relative flex items-center w-full md:max-w-xs shrink-0"
+      >
+        <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground/80" />
+        <Input
+          placeholder="Buscar producto..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="pl-9 pr-8 bg-muted/40 border-none shadow-none rounded-full text-xs h-9 focus-visible:bg-background transition-all duration-300"
+        />
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              updateFilter("q", undefined);
+            }}
+            className="absolute right-3 text-muted-foreground hover:text-foreground p-0.5 rounded-full hover:bg-muted/50 transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </form>
+
       {/* Formulario de búsqueda por Modelo */}
       <form
         onSubmit={(e) => {
@@ -115,12 +145,11 @@ export function CatalogoFilters({ categories, brands, currentCategory, currentBr
         }}
         className="relative flex items-center w-full md:max-w-xs shrink-0"
       >
-        <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground/80" />
         <Input
-          placeholder="Buscar por modelo (ej: Changan)..."
+          placeholder="Filtrar por modelo (ej: Changan)..."
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          className="pl-9 pr-8 bg-muted/40 border-none shadow-none rounded-full text-xs h-9 focus-visible:bg-background transition-all duration-300"
+          className="pl-3 pr-8 bg-muted/40 border-none shadow-none rounded-full text-xs h-9 focus-visible:bg-background transition-all duration-300"
         />
         {model && (
           <button

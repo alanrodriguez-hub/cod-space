@@ -15,12 +15,14 @@ interface Props {
   currentCategory?: string;
   currentBrand?: string;
   currentModel?: string;
+  currentQuery?: string;
 }
 
-export function AdminProductFilters({ categories, brands, carModels, currentCategory, currentBrand, currentModel }: Props) {
+export function AdminProductFilters({ categories, brands, carModels, currentCategory, currentBrand, currentModel, currentQuery }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [modelSearch, setModelSearch] = useState(currentModel || "");
+  const [textSearch, setTextSearch] = useState(currentQuery || "");
 
   function updateFilter(key: string, value: string | undefined) {
     const params = new URLSearchParams(searchParams.toString());
@@ -38,12 +40,14 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
     params.delete("category");
     params.delete("brand");
     params.delete("model");
+    params.delete("q");
     params.delete("page");
     router.push(`/admin/productos?${params.toString()}`);
     setModelSearch("");
+    setTextSearch("");
   }
 
-  const hasFilters = currentCategory || currentBrand || currentModel;
+  const hasFilters = currentCategory || currentBrand || currentModel || currentQuery;
 
   return (
     <div className="flex flex-wrap items-end gap-3">
@@ -74,6 +78,24 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
           </SelectContent>
         </Select>
       </div>
+
+      <form
+        className="flex gap-1"
+        onSubmit={(e) => {
+          e.preventDefault();
+          updateFilter("q", textSearch || undefined);
+        }}
+      >
+        <Input
+          placeholder="Buscar producto..."
+          value={textSearch}
+          onChange={(e) => setTextSearch(e.target.value)}
+          className="w-44 text-sm"
+        />
+        <Button type="submit" size="icon" variant="secondary">
+          <Search className="h-4 w-4" />
+        </Button>
+      </form>
 
       <form
         className="flex gap-1"

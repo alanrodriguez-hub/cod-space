@@ -37,7 +37,7 @@ function decodeCursor(cursor: string): { createdAt: string; id: string } {
 export default async function AdminProductosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ action?: string; id?: string; page?: string; category?: string; brand?: string; model?: string; after?: string; before?: string }>;
+  searchParams: Promise<{ action?: string; id?: string; page?: string; category?: string; brand?: string; model?: string; q?: string; after?: string; before?: string }>;
 }) {
   const params = await searchParams;
   const supabase = await createClient();
@@ -59,6 +59,13 @@ export default async function AdminProductosPage({
 
   if (params.brand) {
     query = query.eq("brand", params.brand);
+  }
+
+  if (params.q) {
+    query = query.textSearch("search_vector", params.q, {
+      type: "websearch",
+      config: "spanish",
+    });
   }
 
   if (params.model) {
@@ -142,6 +149,7 @@ export default async function AdminProductosPage({
         currentCategory={params.category}
         currentBrand={params.brand}
         currentModel={params.model}
+        currentQuery={params.q}
       />
 
       <ProductForm />
@@ -151,6 +159,7 @@ export default async function AdminProductosPage({
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>SKU</TableHead>
                 <TableHead>Producto</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Marca</TableHead>
@@ -164,6 +173,7 @@ export default async function AdminProductosPage({
             <TableBody>
               {products.map((product) => (
                 <TableRow key={product.id}>
+                  <TableCell className="font-mono text-xs">{product.sku ?? "—"}</TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{(product.category as { name: string } | null)?.name ?? "—"}</Badge>
@@ -204,7 +214,7 @@ export default async function AdminProductosPage({
               ))}
               {products.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                     No hay productos
                   </TableCell>
                 </TableRow>
