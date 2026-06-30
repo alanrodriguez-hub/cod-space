@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Category, Brand, CarModel } from "@/lib/types";
 import { useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Ban } from "lucide-react";
 
 interface Props {
   categories: Category[];
@@ -42,6 +42,8 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
     params.delete("model");
     params.delete("q");
     params.delete("page");
+    params.delete("after");
+    params.delete("before");
     router.push(`/admin/productos?${params.toString()}`);
     setModelSearch("");
     setTextSearch("");
@@ -72,6 +74,7 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">Todas las marcas</SelectItem>
+            <SelectItem value="__sin_marca__">Sin marca</SelectItem>
             {brands.map((b) => (
               <SelectItem key={b.id} value={b.name}>{b.name}</SelectItem>
             ))}
@@ -112,6 +115,19 @@ export function AdminProductFilters({ categories, brands, carModels, currentCate
         />
         <Button type="submit" size="icon" variant="secondary">
           <Search className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={currentModel === "__sin_modelo__" ? "secondary" : "outline"}
+          className="text-xs gap-1 cursor-pointer"
+          onClick={() => {
+            const next = currentModel === "__sin_modelo__" ? undefined : "__sin_modelo__";
+            setModelSearch(next || "");
+            updateFilter("model", next);
+          }}
+        >
+          <Ban className="h-3 w-3" /> Sin modelo
         </Button>
       </form>
 

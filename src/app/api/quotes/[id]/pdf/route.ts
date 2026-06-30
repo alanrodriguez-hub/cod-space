@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-auth";
 import PDFDocument from "pdfkit";
 
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { id } = await params;
-    const supabase = await createClient();
+    const supabase = auth.supabase;
 
     const { data: quote } = await supabase.from("quotes").select("*").eq("id", id).single();
     if (!quote) {
@@ -77,10 +83,12 @@ export async function GET(
       const itemsData = items || [];
       let y = 210;
 
-      const colX = [50, 200, 350, 430, 500];
-      const colW = [150, 150, 80, 70, 70];
+      const colX = [50, 270, 320, 430];
+      const colW = [220, 50, 110, 115];
+      const tableW = colW.reduce((a, b) => a + b, 0);
+      const tableEnd = colX[0] + tableW;
 
-      doc.rect(50, y, 500, 20).fill("#f8fafc").fillColor("#fff");
+      doc.rect(50, y, tableW, 20).fill("#f8fafc").fillColor("#fff");
 
       doc.fillColor("#64748b").fontSize(9).font("Helvetica-Bold");
       doc.text("Producto", colX[0], y + 5, { width: colW[0] });
@@ -98,23 +106,23 @@ export async function GET(
         total += lineTotal;
 
         if (rowCount % 2 === 0) {
-          doc.rect(50, y - 4, 500, 24).fill("#fafafa").fillColor("#000");
+          doc.rect(colX[0], y - 4, tableW, 24).fill("#fafafa").fillColor("#000");
         }
 
         doc.fontSize(9).font("Helvetica");
-        doc.text(item.product_name, colX[0], y, { width: colW[0] });
-        doc.text(String(item.quantity), colX[1], y, { width: colW[1], align: "center" });
+        doc.text(item.product_name, colX[0], y, { width: colW[0], lineBreak: false });
+        doc.text(String(item.quantity), colX[1], y, { width: colW[1], align: "center", lineBreak: false });
         doc.text(
           `$${item.unit_price.toLocaleString("es-CL")}`,
           colX[2],
           y,
-          { width: colW[2], align: "right" }
+          { width: colW[2], align: "right", lineBreak: false }
         );
         doc.text(
           `$${lineTotal.toLocaleString("es-CL")}`,
           colX[3],
           y,
-          { width: colW[3], align: "right" }
+          { width: colW[3], align: "right", lineBreak: false }
         );
 
         y += 24;
@@ -126,16 +134,16 @@ export async function GET(
         }
       }
 
-      doc.moveTo(50, y).lineTo(550, y).stroke("#e2e8f0");
+      doc.moveTo(colX[0], y).lineTo(tableEnd, y).stroke("#e2e8f0");
       y += 12;
 
       doc.fontSize(12).font("Helvetica-Bold");
-      doc.text("TOTAL", 350, y);
+      doc.text("TOTAL", colX[2], y, { width: colW[2], align: "right" });
       doc.text(
         `$${total.toLocaleString("es-CL")}`,
-        500,
+        colX[3],
         y,
-        { align: "right" }
+        { width: colW[3], align: "right" }
       );
     }
 

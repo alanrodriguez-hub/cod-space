@@ -58,18 +58,28 @@ export default async function AdminProductosPage({
   }
 
   if (params.brand) {
-    query = query.eq("brand", params.brand);
-  }
-
-  if (params.q) {
-    query = query.textSearch("search_vector", params.q, {
-      type: "websearch",
-      config: "spanish",
-    });
+    if (params.brand === "__sin_marca__") {
+      query = query.eq("brand", "");
+    } else {
+      query = query.eq("brand", params.brand);
+    }
   }
 
   if (params.model) {
-    query = query.ilike("car_model", `%${params.model}%`);
+    if (params.model === "__sin_modelo__") {
+      query = query.eq("car_model", "");
+    } else {
+      query = query.ilike("car_model", `%${params.model}%`);
+    }
+  }
+
+  if (params.q) {
+    const sanitized = params.q.replace(/,/g, " ").trim();
+    query = query.or(
+      `search_vector.wfts.${sanitized},` +
+      `name.ilike.%${sanitized}%,` +
+      `item_code.ilike.%${sanitized}%`
+    );
   }
 
   const after = params.after;

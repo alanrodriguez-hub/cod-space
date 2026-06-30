@@ -32,38 +32,26 @@ create index idx_products_brand_model on public.products(brand, car_model);
 create index if not exists idx_products_item_code on public.products(item_code);
 create index if not exists idx_products_item_code_unique on public.products(item_code) where item_code is not null;
 
--- 7. Función y trigger para auto-actualizar search_vector
-create or replace function public.products_search_vector_update()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.search_vector := to_tsvector('spanish',
-    coalesce(new.name, '') || ' ' ||
-    coalesce(new.description, '') || ' ' ||
-    coalesce(new.brand, '') || ' ' ||
-    coalesce(new.car_model, '')
-  );
-  return new;
-end;
-$$;
+-- 7. Convertir search_vector a columna generada (incluye sku e item_code)
+alter table public.products drop column if exists search_vector;
+alter table public.products add column search_vector tsvector generated always as (
+  to_tsvector('spanish',
+    coalesce(name, '') || ' ' ||
+    coalesce(description, '') || ' ' ||
+    coalesce(brand, '') || ' ' ||
+    coalesce(car_model, '') || ' ' ||
+    coalesce(sku::text, '') || ' ' ||
+    coalesce(item_code, '')
+  )
+) stored;
 
-drop trigger if exists trg_products_search_vector on public.products;
-create trigger trg_products_search_vector
-  before insert or update of name, description, brand, car_model
-  on public.products
-  for each row
-  execute function public.products_search_vector_update();
+-- Recrear índice GIN
+drop index if exists idx_products_search_vector;
+create index idx_products_search_vector on public.products using gin(search_vector);
 
--- 8. Poblar search_vector para filas existentes
-update public.products
-set search_vector = to_tsvector('spanish',
-  coalesce(name, '') || ' ' ||
-  coalesce(description, '') || ' ' ||
-  coalesce(brand, '') || ' ' ||
-  coalesce(car_model, '')
-)
-where search_vector is null;
+-- 8. Índices trigram para búsqueda híbrida ILIKE
+create index if not exists idx_products_item_code_trgm on public.products using gin (item_code gin_trgm_ops);
+create index if not exists idx_products_sku_trgm on public.products using gin ((sku::text) gin_trgm_ops);
 
 -- 9. Generar SKU secuencial para productos existentes que no tengan
 do $$

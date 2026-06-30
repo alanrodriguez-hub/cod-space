@@ -86,6 +86,7 @@ export function CatalogoFilters({ categories, brands, currentCategory, currentBr
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">Todas las marcas</SelectItem>
+              <SelectItem value="__sin_marca__">Sin marca</SelectItem>
               {brands.map((b) => (
                 <SelectItem key={b} value={b}>
                   {b}
