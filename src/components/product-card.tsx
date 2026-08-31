@@ -48,6 +48,9 @@ export function ProductCard({ product }: { product: Product }) {
             {brandName} {modelName ? `· ${modelName}` : ""}
           </p>
         )}
+        {product.sku && (
+          <p className="text-[10px] font-mono text-muted-foreground/60">SKU: {product.sku}</p>
+        )}
         
         <Link href={`/catalogo/${product.id}`} className="block flex-1">
           <h3 className="text-sm font-medium leading-snug text-foreground line-clamp-2 hover:text-primary transition-colors duration-200">

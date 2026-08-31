@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, Plus } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import { AdminQuoteFilters } from "@/components/admin/quote-filters";
 import type { QuoteStatus } from "@/lib/types";
@@ -120,7 +120,12 @@ export default async function AdminCotizacionesPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Cotizaciones</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Cotizaciones</h1>
+        <Link href="/admin/cotizaciones/nueva" className={buttonVariants()}>
+          <Plus className="h-4 w-4 mr-1" /> Nueva Cotización
+        </Link>
+      </div>
 
       <AdminQuoteFilters
         currentStatus={params.status}

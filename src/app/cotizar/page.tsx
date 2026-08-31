@@ -16,6 +16,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Send, CheckCircle, AlertCircle, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { emailSchema } from "@/lib/validations";
 import type { QuoteItem } from "@/lib/types";
 
 export default function CotizarPage() {
@@ -38,11 +39,22 @@ function CotizarForm() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
   const [phone, setPhone] = useState("");
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const validateEmail = useCallback((value: string) => {
+    const result = emailSchema.safeParse(value);
+    if (!result.success) {
+      const issue = result.error.issues[0];
+      return issue.message;
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -87,8 +99,21 @@ function CotizarForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!name.trim() || !email.trim()) {
-      toast.error("Completa nombre y email");
+    if (!name.trim()) {
+      toast.error("Completa tu nombre");
+      return;
+    }
+
+    if (!email.trim()) {
+      toast.error("Completa tu email");
+      return;
+    }
+
+    const emailErr = validateEmail(email.trim());
+    if (emailErr) {
+      setEmailError(emailErr);
+      setEmailTouched(true);
+      toast.error(emailErr);
       return;
     }
 
@@ -184,10 +209,21 @@ function CotizarForm() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailTouched) setEmailError(validateEmail(e.target.value) || "");
+                    }}
+                    onBlur={() => {
+                      setEmailTouched(true);
+                      setEmailError(validateEmail(email) || "");
+                    }}
                     placeholder="correo@ejemplo.com"
                     required
+                    aria-invalid={!!emailError}
                   />
+                  {emailError && (
+                    <p className="text-xs text-destructive mt-1">{emailError}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="phone">Teléfono</Label>

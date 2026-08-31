@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin-auth";
+import { checkRateLimit } from "@/lib/rate-limit";
 import nodemailer from "nodemailer";
 import PDFDocument from "pdfkit";
 import type { QuoteResponseItem } from "@/lib/types";
@@ -57,12 +59,17 @@ function generatePdfBuffer(
     doc.fillColor("#000");
 
     let y = 210;
-    doc.rect(50, y, 500, 20).fill("#f8fafc").fillColor("#fff");
+    const colX = [50, 270, 320, 430];
+    const colW = [220, 50, 110, 115];
+    const tableW = colW.reduce((a, b) => a + b, 0);
+    const tableEnd = colX[0] + tableW;
+
+    doc.rect(colX[0], y, tableW, 20).fill("#f8fafc").fillColor("#fff");
     doc.fillColor("#64748b").fontSize(9).font("Helvetica-Bold");
-    doc.text("Producto", 50, y + 5, { width: 150 });
-    doc.text("Cant.", 200, y + 5, { width: 150, align: "center" });
-    doc.text("P. Unit.", 350, y + 5, { width: 80, align: "right" });
-    doc.text("Total", 430, y + 5, { width: 70, align: "right" });
+    doc.text("Producto", colX[0], y + 5, { width: colW[0] });
+    doc.text("Cant.", colX[1], y + 5, { width: colW[1], align: "center" });
+    doc.text("P. Unit.", colX[2], y + 5, { width: colW[2], align: "right" });
+    doc.text("Total", colX[3], y + 5, { width: colW[3], align: "right" });
     doc.fillColor("#000");
 
     y += 25;
@@ -71,18 +78,18 @@ function generatePdfBuffer(
       const lineTotal = item.quantity * item.unit_price;
       total += lineTotal;
       doc.fontSize(9).font("Helvetica");
-      doc.text(item.product_name, 50, y, { width: 150 });
-      doc.text(String(item.quantity), 200, y, { width: 150, align: "center" });
-      doc.text(`$${item.unit_price.toLocaleString("es-CL")}`, 350, y, { width: 80, align: "right" });
-      doc.text(`$${lineTotal.toLocaleString("es-CL")}`, 430, y, { width: 70, align: "right" });
+      doc.text(item.product_name, colX[0], y, { width: colW[0], lineBreak: false });
+      doc.text(String(item.quantity), colX[1], y, { width: colW[1], align: "center", lineBreak: false });
+      doc.text(`$${item.unit_price.toLocaleString("es-CL")}`, colX[2], y, { width: colW[2], align: "right", lineBreak: false });
+      doc.text(`$${lineTotal.toLocaleString("es-CL")}`, colX[3], y, { width: colW[3], align: "right", lineBreak: false });
       y += 24;
     }
 
-    doc.moveTo(50, y).lineTo(550, y).stroke("#e2e8f0");
+    doc.moveTo(colX[0], y).lineTo(tableEnd, y).stroke("#e2e8f0");
     y += 12;
     doc.fontSize(12).font("Helvetica-Bold");
-    doc.text("TOTAL", 350, y);
-    doc.text(`$${total.toLocaleString("es-CL")}`, 500, y, { align: "right" });
+    doc.text("TOTAL", colX[2], y, { width: colW[2], align: "right" });
+    doc.text(`$${total.toLocaleString("es-CL")}`, colX[3], y, { width: colW[3], align: "right" });
 
     doc.fontSize(8).font("Helvetica").fillColor("#94a3b8");
     doc.text(
@@ -102,11 +109,21 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
+    const rl = await checkRateLimit(request, "admin_quote_send", 30, 15);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Demasiadas solicitudes. Intenta más tarde." }, { status: 429 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { message } = body;
 
-    const supabase = await createClient();
+    const supabase = auth.supabase;
     const { data: quote } = await supabase.from("quotes").select("*").eq("id", id).single();
     if (!quote) {
       return NextResponse.json({ error: "Cotización no encontrada" }, { status: 404 });
@@ -123,11 +140,11 @@ export async function POST(
     }
 
     const s = await getSettingsMap();
-    const smtpHost = s.smtp_host;
-    const smtpPort = s.smtp_port;
-    const smtpUser = s.smtp_user;
-    const smtpPass = s.smtp_password;
-    const smtpFrom = s.smtp_from || "no-reply@codspace.cl";
+    const smtpHost = process.env.SMTP_HOST || s.smtp_host;
+    const smtpPort = process.env.SMTP_PORT || s.smtp_port;
+    const smtpUser = process.env.SMTP_USER || s.smtp_user;
+    const smtpPass = process.env.SMTP_PASSWORD || s.smtp_password;
+    const smtpFrom = process.env.SMTP_FROM || s.smtp_from || "no-reply@codspace.cl";
     const siteName = s.site_name || "Spartaco Repuestos";
 
     if (!smtpHost || !smtpUser || !smtpPass) {

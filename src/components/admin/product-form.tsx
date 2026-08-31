@@ -28,6 +28,8 @@ interface FormData {
   image_url: string;
   category_id: string;
   stock: string;
+  sku: string;
+  item_code: string;
 }
 
 const emptyForm: FormData = {
@@ -37,6 +39,8 @@ const emptyForm: FormData = {
   image_url: "",
   category_id: "",
   stock: "0",
+  sku: "",
+  item_code: "",
 };
 
 export function ProductForm({ editId }: { editId: string | null }) {
@@ -73,6 +77,8 @@ export function ProductForm({ editId }: { editId: string | null }) {
             image_url: data.image_url ?? "",
             category_id: data.category_id ?? "",
             stock: String(data.stock),
+            sku: data.sku != null ? String(data.sku) : "",
+            item_code: data.item_code ?? "",
           });
         }
       });
@@ -169,6 +175,8 @@ export function ProductForm({ editId }: { editId: string | null }) {
       brand: selectedBrands.map((b) => b.name).join(", "),
       car_model: selectedModels.map((m) => m.name).join(", "),
       stock: parseInt(form.stock),
+      sku: form.sku ? parseInt(form.sku) : null,
+      item_code: form.item_code || null,
     };
 
     let productId = editId;
@@ -262,6 +270,14 @@ export function ProductForm({ editId }: { editId: string | null }) {
           <div>
             <Label htmlFor="stock">Stock</Label>
             <Input id="stock" name="stock" type="number" value={form.stock} onChange={handleChange} required />
+          </div>
+          <div>
+            <Label htmlFor="sku">SKU (código numérico)</Label>
+            <Input id="sku" name="sku" type="number" value={form.sku} onChange={handleChange} placeholder="Ej: 1001" />
+          </div>
+          <div>
+            <Label htmlFor="item_code">Código interno</Label>
+            <Input id="item_code" name="item_code" value={form.item_code} onChange={handleChange} placeholder="Ej: MOT-001" />
           </div>
           <div>
             <Label htmlFor="category_id">Categoria</Label>

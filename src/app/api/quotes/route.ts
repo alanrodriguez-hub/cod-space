@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import nodemailer from "nodemailer";
 import type { QuoteItem } from "@/lib/types";
 
@@ -30,6 +31,11 @@ function itemsHtml(items: QuoteItem[]) {
 
 export async function POST(request: Request) {
   try {
+    const rl = await checkRateLimit(request, "public_quote_request", 5, 15);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Demasiadas solicitudes. Intenta más tarde." }, { status: 429 });
+    }
+
     const body = await request.json();
     const { name, email, phone, items, message } = body;
 
@@ -69,11 +75,11 @@ export async function POST(request: Request) {
     }
 
     const s = await getSettingsMap();
-    const smtpHost = s.smtp_host;
-    const smtpPort = s.smtp_port;
-    const smtpUser = s.smtp_user;
-    const smtpPass = s.smtp_password;
-    const smtpFrom = s.smtp_from || "no-reply@codspace.cl";
+    const smtpHost = process.env.SMTP_HOST || s.smtp_host;
+    const smtpPort = process.env.SMTP_PORT || s.smtp_port;
+    const smtpUser = process.env.SMTP_USER || s.smtp_user;
+    const smtpPass = process.env.SMTP_PASSWORD || s.smtp_password;
+    const smtpFrom = process.env.SMTP_FROM || s.smtp_from || "no-reply@codspace.cl";
     const adminEmail = s.contact_email || "";
     const siteName = s.site_name || "Spartaco Repuestos";
 

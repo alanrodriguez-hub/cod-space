@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", minimumFractionDigits: 0 }).format(price);
@@ -25,13 +26,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Faltan parámetros requeridos" }, { status: 400 });
     }
 
+    const rl = await checkRateLimit(request, "send_order_email", 2, 5);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Demasiadas solicitudes. Intenta más tarde." }, { status: 429 });
+    }
+
     const s = await getSettingsMap();
 
-    const smtpHost = s.smtp_host;
-    const smtpPort = s.smtp_port;
-    const smtpUser = s.smtp_user;
-    const smtpPass = s.smtp_password;
-    const smtpFrom = s.smtp_from || "no-reply@codspace.cl";
+    const smtpHost = process.env.SMTP_HOST || s.smtp_host;
+    const smtpPort = process.env.SMTP_PORT || s.smtp_port;
+    const smtpUser = process.env.SMTP_USER || s.smtp_user;
+    const smtpPass = process.env.SMTP_PASSWORD || s.smtp_password;
+    const smtpFrom = process.env.SMTP_FROM || s.smtp_from || "no-reply@codspace.cl";
     const transferCompanyName = s.transfer_company_name || "Importadora y Distribuidora CodSpace Ltda.";
     const transferCompanyRut = s.transfer_company_rut || "76.123.456-K";
     const transferAccountType = s.transfer_account_type || "Cuenta Corriente";

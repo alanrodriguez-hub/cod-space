@@ -17,6 +17,19 @@ create table if not exists public.products (
   brand text not null default '',
   car_model text not null default '',
   stock integer not null default 0,
+  featured boolean not null default false,
+  sku integer,
+  item_code text,
+  search_vector tsvector generated always as (
+    to_tsvector('spanish',
+      coalesce(name, '') || ' ' ||
+      coalesce(description, '') || ' ' ||
+      coalesce(brand, '') || ' ' ||
+      coalesce(car_model, '') || ' ' ||
+      coalesce(sku::text, '') || ' ' ||
+      coalesce(item_code, '')
+    )
+  ) stored,
   created_at timestamptz default now()
 );
 
@@ -43,6 +56,21 @@ create table if not exists public.order_items (
 -- RLS
 alter table public.categories enable row level security;
 alter table public.products enable row level security;
+
+-- Products: Full-text search indexes
+create extension if not exists pg_trgm;
+create unique index if not exists idx_products_sku_unique on public.products(sku) where sku is not null;
+create index if not exists idx_products_search_vector on public.products using gin(search_vector);
+create index if not exists idx_products_name_trgm on public.products using gin (name gin_trgm_ops);
+create index if not exists idx_products_description_trgm on public.products using gin (description gin_trgm_ops);
+create index if not exists idx_products_brand_trgm on public.products using gin (brand gin_trgm_ops);
+create index if not exists idx_products_car_model_trgm on public.products using gin (car_model gin_trgm_ops);
+create index if not exists idx_products_item_code on public.products(item_code);
+create index if not exists idx_products_item_code_unique on public.products(item_code) where item_code is not null;
+create index if not exists idx_products_item_code_trgm on public.products using gin (item_code gin_trgm_ops);
+create index if not exists idx_products_sku_trgm on public.products using gin ((sku::text) gin_trgm_ops);
+create index if not exists idx_products_category_brand on public.products(category_id, brand);
+create index if not exists idx_products_brand_model on public.products(brand, car_model);
 alter table public.orders enable row level security;
 alter table public.order_items enable row level security;
 
@@ -217,3 +245,19 @@ begin
   );
 end;
 $$;
+
+-- Seed categories
+insert into public.categories (id, name, slug) values
+  ('786385dc-02d4-420c-ac40-18c1c444c93c', 'Accesorios', 'accesorios'),
+  ('a0000000-0000-4000-8000-000000000001', 'Carrocería', 'carroceria'),
+  ('18989252-093f-457e-a3c3-52ca590e2005', 'Eléctrico', 'electrico'),
+  ('56a75759-6933-4af0-8ca9-b908efe54882', 'Filtros', 'filtros'),
+  ('3bd3397a-ffc1-420b-a791-f1d3e9cea7cf', 'Frenos', 'frenos'),
+  ('ed6dfb78-358f-492b-8f12-7715e9410da0', 'Limpieza', 'limpieza'),
+  ('153fe0cd-81d5-4ad4-b1f0-1b00dae99438', 'Lubricantes', 'lubricantes'),
+  ('193be204-5df2-40f4-aea3-c18f514c61dc', 'Motor', 'motor'),
+  ('f7f3447c-28d8-46d8-b6ed-209536fc9ed9', 'Opticos', 'opticos'),
+  ('ded8c695-368c-40bc-b5ee-399f43b2e187', 'Repuestos', 'repuestos'),
+  ('ccf1e71c-0454-49ab-afcc-c767d965f62d', 'Suspensión', 'suspension'),
+  ('8039ee9e-6aa1-4ff6-90ce-00469922eb50', 'Transmisión', 'transmision')
+on conflict (slug) do nothing;

@@ -41,7 +41,11 @@ export default async function CatalogoPage({
   }
 
   if (params.brand) {
-    query = query.eq("brand", params.brand);
+    if (params.brand === "__sin_marca__") {
+      query = query.eq("brand", "");
+    } else {
+      query = query.eq("brand", params.brand);
+    }
   }
 
   if (params.model) {
@@ -49,10 +53,12 @@ export default async function CatalogoPage({
   }
 
   if (params.q) {
-    query = query.textSearch("search_vector", params.q, {
-      type: "websearch",
-      config: "spanish",
-    });
+    const sanitized = params.q.replace(/,/g, " ").trim();
+    query = query.or(
+      `search_vector.wfts.${sanitized},` +
+      `name.ilike.%${sanitized}%,` +
+      `item_code.ilike.%${sanitized}%`
+    );
   }
 
   const after = params.after;
